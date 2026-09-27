@@ -96,6 +96,11 @@ textarea{min-height:64px; resize:vertical;}
     <div id="hoy-embudo"></div>
     <button class="btn btn-ghost no-print" onclick="go('t-embudo')">Actualizar números</button>
   </div>
+  <div class="card">
+    <h2>📝 Reporte del día</h2>
+    <div id="hoy-rep"></div>
+    <button class="btn btn-ghost no-print" onclick="go('t-reporte',document.querySelectorAll('nav.tabs button')[8])">Llenar reporte</button>
+  </div>
 </section>
 
 <!-- ============ CITAS ============ -->
@@ -315,6 +320,37 @@ textarea{min-height:64px; resize:vertical;}
   </div>
 </section>
 
+<!-- ============ REPORTE ============ -->
+<section class="tab" id="t-reporte">
+  <div class="card">
+    <h2>📝 Reporte diario</h2>
+    <p class="small">Tu registro diario estilo Gladiators. Llena tus números al terminar el día.</p>
+    <label>Fecha</label><input id="rp-fecha" type="date">
+    <div class="row2">
+      <div><label>Citas agendadas</label><input id="rp-ag" type="number" min="0" value="0"></div>
+      <div><label>Citas realizadas</label><input id="rp-re" type="number" min="0" value="0"></div>
+    </div>
+    <div class="row2">
+      <div><label>Presentaciones</label><input id="rp-pr" type="number" min="0" value="0"></div>
+      <div><label>Ventas cerradas</label><input id="rp-ve" type="number" min="0" value="0"></div>
+    </div>
+    <div class="row2">
+      <div><label>ALP vendido ($)</label><input id="rp-alp" type="number" min="0" value="0"></div>
+      <div><label>Referidos obtenidos</label><input id="rp-rf" type="number" min="0" value="0"></div>
+    </div>
+    <button class="btn btn-gold" onclick="guardarReporte()">Guardar reporte del día</button>
+  </div>
+  <div class="card">
+    <h2>📊 Resumen de la semana</h2>
+    <div id="rep-semana"></div>
+    <button class="btn btn-wa" onclick="waReporte()">Enviar reporte por WhatsApp 📲</button>
+  </div>
+  <div class="card">
+    <h2>🗂️ Últimos reportes</h2>
+    <div id="lista-rep"></div>
+  </div>
+</section>
+
 <nav class="tabs">
   <button class="act" onclick="go('t-hoy',this)"><span class="ic">🏠</span>Hoy</button>
   <button onclick="go('t-citas',this)"><span class="ic">📅</span>Citas</button>
@@ -324,6 +360,7 @@ textarea{min-height:64px; resize:vertical;}
   <button onclick="go('t-ilus',this)"><span class="ic">📊</span>Ilustrador</button>
   <button onclick="go('t-recta',this)"><span class="ic">⚡</span>Línea Recta</button>
   <button onclick="go('t-embudo',this)"><span class="ic">🎯</span>Embudo</button>
+  <button onclick="go('t-reporte',this)"><span class="ic">📝</span>Reporte</button>
 </nav>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -544,6 +581,60 @@ function renderEmbudo(){const e=load('gl_embudo',{ag:0,re:0,ve:0,rf:0});
   $('e-ag').value=e.ag;$('e-re').value=e.re;$('e-ve').value=e.ve;$('e-rf').value=e.rf;
   $('embudo-out').innerHTML=embudoHTML(e);}
 
+/* ===== REPORTE ===== */
+function guardarReporte(){
+  const fecha=$('rp-fecha').value||hoyISO();
+  const r={id:Date.now(),fecha,ag:+$('rp-ag').value||0,re:+$('rp-re').value||0,pr:+$('rp-pr').value||0,
+    ve:+$('rp-ve').value||0,alp:+$('rp-alp').value||0,rf:+$('rp-rf').value||0};
+  let reps=load('gl_reps',[]).filter(x=>x.fecha!==fecha);
+  reps.push(r); save('gl_reps',reps);
+  ['rp-ag','rp-re','rp-pr','rp-ve','rp-alp','rp-rf'].forEach(i=>$(i).value=0);
+  $('rp-fecha').value=hoyISO();
+  renderReportes(); renderHoy();
+}
+function semanaRango(){
+  const d=new Date(),ini=new Date(d); ini.setDate(d.getDate()-d.getDay());
+  const fin=new Date(ini); fin.setDate(ini.getDate()+6);
+  return [ini.toISOString().slice(0,10),fin.toISOString().slice(0,10)];
+}
+function renderReportes(){
+  const[ini,fin]=semanaRango();
+  const reps=load('gl_reps',[]).filter(x=>x.fecha>=ini&&x.fecha<=fin);
+  const t=k=>reps.reduce((a,x)=>a+(+x[k]||0),0);
+  const T={ag:t('ag'),re:t('re'),pr:t('pr'),ve:t('ve'),alp:t('alp'),rf:t('rf')};
+  const conv=(a,b)=>b>0?Math.round(a/b*100)+'%':'—';
+  $('rep-semana').innerHTML=`
+    <div class="kpis">
+      <div class="kpi"><div class="n">${T.ag}</div><div class="l">Citas agend.</div></div>
+      <div class="kpi"><div class="n">${T.re}</div><div class="l">Realizadas</div></div>
+      <div class="kpi"><div class="n">${T.pr}</div><div class="l">Presentaciones</div></div>
+      <div class="kpi"><div class="n">${T.ve}</div><div class="l">Ventas</div></div>
+    </div>
+    <div class="fila"><span>💰 ALP semanal</span><b>$${T.alp.toLocaleString('en-US')}</b></div>
+    <div class="fila"><span>🤝 Referidos</span><b>${T.rf}</b></div>
+    <div class="fila"><span>Efectividad cita → presentación</span><b>${conv(T.pr,T.re)}</b></div>
+    <div class="fila"><span>Cierre presentación → venta</span><b>${conv(T.ve,T.pr)}</b></div>`;
+  const ult=load('gl_reps',[]).slice().sort((a,b)=>b.fecha.localeCompare(a.fecha)).slice(0,10);
+  $('lista-rep').innerHTML=ult.length?ult.map(r=>`
+    <div class="item"><div class="t">📅 ${fmtFecha(r.fecha)}</div>
+      <div class="s">Ag:${r.ag} · Re:${r.re} · Pres:${r.pr} · Ventas:${r.ve} · ALP:$${(+r.alp).toLocaleString('en-US')} · Ref:${r.rf}</div>
+      <div class="acts"><button onclick="borrarRep(${r.id})">Borrar</button></div></div>`).join('')
+    :'<p class="small">Sin reportes aún.</p>';
+}
+function borrarRep(id){if(!confirm('¿Borrar reporte?'))return;
+  save('gl_reps',load('gl_reps',[]).filter(x=>x.id!==id));renderReportes();renderHoy();}
+function waReporte(){
+  const[ini,fin]=semanaRango();
+  const reps=load('gl_reps',[]).filter(x=>x.fecha>=ini&&x.fecha<=fin);
+  if(!reps.length){alert('No hay reportes esta semana');return;}
+  const t=k=>reps.reduce((a,x)=>a+(+x[k]||0),0);
+  const T={ag:t('ag'),re:t('re'),pr:t('pr'),ve:t('ve'),alp:t('alp'),rf:t('rf')};
+  const txt='⚔️ *REPORTE SEMANAL — GLADIADORES*%0A📅 '+fmtFecha(ini)+' al '+fmtFecha(fin)+'%0A%0A'+
+    '📌 Citas agendadas: '+T.ag+'%0A✅ Citas realizadas: '+T.re+'%0A🎤 Presentaciones: '+T.pr+'%0A'+
+    '💰 Ventas: '+T.ve+'%0A💵 ALP: $'+T.alp.toLocaleString('en-US')+'%0A🤝 Referidos: '+T.rf;
+  window.open('https://wa.me/?text='+txt,'_blank');
+}
+
 /* ===== DRILL ===== */
 const DRILL=['1 presentación grabada en video','Repetir el guion palabra por palabra','Practicar las 10 tonalidades','Hacer loops de objeciones en voz alta','Repasar los tres dieces','Practicar el cierre de tres tonos'];
 function renderDrill(){
@@ -566,10 +657,15 @@ function renderHoy(){
   const e=load('gl_embudo',{ag:0,re:0,ve:0,rf:0});
   $('k-emb').textContent=Math.min(100,Math.round(e.ag/20*100))+'%';
   $('hoy-embudo').innerHTML=embudoHTML(e);
+  const repHoy=load('gl_reps',[]).find(x=>x.fecha===h);
+  $('hoy-rep').innerHTML=repHoy
+    ?`<div class="fila"><span>Estado</span><b>✅ Guardado</b></div><div class="s">Ag:${repHoy.ag} · Re:${repHoy.re} · Pres:${repHoy.pr} · Ventas:${repHoy.ve} · ALP:$${(+repHoy.alp).toLocaleString('en-US')} · Ref:${repHoy.rf}</div>`
+    :'<p class="small">⏳ Pendiente — llénalo al terminar el día.</p>';
 }
 
 /* ===== INIT ===== */
-renderCitas();renderRefs();renderSeg();renderEmbudo();renderDrill();renderHoy();
+$('rp-fecha').value=hoyISO();
+renderCitas();renderRefs();renderSeg();renderEmbudo();renderDrill();renderReportes();renderHoy();
 </script>
 </body>
 </html>
