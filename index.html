@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Gladiadores · Herramienta Maestra</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{
+  --bg:#0f1115; --card:#1a1e26; --card2:#222836; --gold:#f5b301; --gold2:#ffd34d;
+  --txt:#f2f4f8; --mut:#9aa3b2; --ok:#2ecc71; --warn:#f39c12; --bad:#e74c3c; --blue:#3498db;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; background:var(--bg); color:var(--txt); padding-bottom:86px;}
+header{position:sticky; top:0; z-index:50; background:linear-gradient(135deg,#141821,#1d2330); border-bottom:2px solid var(--gold); padding:12px 16px;}
+header h1{margin:0; font-size:18px; letter-spacing:1px;}
+header h1 span{color:var(--gold);}
+header p{margin:2px 0 0; font-size:11px; color:var(--mut);}
+nav.tabs{position:fixed; bottom:0; left:0; right:0; z-index:60; display:flex; background:#141821; border-top:2px solid var(--gold); overflow-x:auto;}
+nav.tabs button{flex:1 0 auto; min-width:64px; background:none; border:none; color:var(--mut); font-size:10px; padding:8px 4px 10px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:2px;}
+nav.tabs button .ic{font-size:20px;}
+nav.tabs button.act{color:var(--gold);}
+.tab{display:none; padding:14px 14px 20px; max-width:720px; margin:0 auto;}
+.tab.act{display:block;}
+.card{background:var(--card); border-radius:14px; padding:14px; margin-bottom:12px; border:1px solid #2a3140;}
+.card h2{margin:0 0 10px; font-size:16px; color:var(--gold);}
+.card h3{margin:12px 0 6px; font-size:14px; color:var(--gold2);}
+label{display:block; font-size:12px; color:var(--mut); margin:10px 0 4px;}
+input,select,textarea{width:100%; padding:11px 12px; border-radius:10px; border:1px solid #333c4e; background:#10141b; color:var(--txt); font-size:15px;}
+textarea{min-height:64px; resize:vertical;}
+.btn{display:block; width:100%; padding:13px; margin-top:12px; border:none; border-radius:12px; font-size:16px; font-weight:700; cursor:pointer;}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2)); color:#141414;}
+.btn-ghost{background:var(--card2); color:var(--txt); border:1px solid #3a4356;}
+.btn-wa{background:#25d366; color:#0b3d1e;}
+.btn-danger{background:#3a1d1d; color:#ff8a8a; border:1px solid #5c2626;}
+.row2{display:flex; gap:10px;} .row2>*{flex:1;}
+.item{background:var(--card2); border-radius:10px; padding:10px 12px; margin-bottom:8px; border-left:4px solid var(--gold);}
+.item .t{font-weight:700; font-size:14px;}
+.item .s{font-size:12px; color:var(--mut); margin-top:2px;}
+.item .acts{display:flex; gap:8px; margin-top:8px;}
+.item .acts button{flex:1; padding:8px; border-radius:8px; border:1px solid #3a4356; background:#10141b; color:var(--txt); font-size:12px; cursor:pointer;}
+.badge{display:inline-block; font-size:11px; padding:3px 9px; border-radius:20px; font-weight:700;}
+.b-nuevo{background:#243b5c; color:#7fb7ff;} .b-contacto{background:#3d3417; color:var(--gold2);}
+.b-cita{background:#173d2a; color:#7be3a8;} .b-present{background:#3a1f3f; color:#d99ae8;}
+.b-cierre{background:#1f3a44; color:#8ad8e8;} .b-ganado{background:#1d4d2c; color:#9df0b6;}
+.kpis{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;}
+.kpi{background:var(--card); border-radius:12px; padding:12px; text-align:center; border:1px solid #2a3140;}
+.kpi .n{font-size:24px; font-weight:800; color:var(--gold);}
+.kpi .l{font-size:11px; color:var(--mut); margin-top:2px;}
+.bar{height:10px; background:#10141b; border-radius:6px; overflow:hidden; margin:6px 0 2px;}
+.bar>div{height:100%; background:linear-gradient(90deg,var(--gold),var(--gold2)); border-radius:6px;}
+.fila{display:flex; justify-content:space-between; font-size:13px; margin:4px 0;}
+.fila b{color:var(--gold2);}
+#map{height:52vh; min-height:340px; border-radius:14px; border:1px solid #2a3140;}
+.leaflet-container{font-family:inherit;}
+.mod{font-size:13px; line-height:1.55;}
+.mod summary{cursor:pointer; font-weight:700; color:var(--gold); font-size:14px; padding:8px 0;}
+.mod details{border-bottom:1px solid #2a3140; padding-bottom:6px;}
+.mod ol,.mod ul{margin:6px 0; padding-left:20px;}
+.mod li{margin:5px 0;}
+.tono{display:inline-block; background:#3d3417; color:var(--gold2); font-size:11px; padding:2px 8px; border-radius:12px; margin:2px 2px 2px 0;}
+.check{display:flex; align-items:center; gap:10px; padding:9px 4px; border-bottom:1px solid #232a38; font-size:14px;}
+.check input{width:22px; height:22px; accent-color:var(--gold);}
+.stack-row{display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed #2a3140; font-size:14px;}
+.stack-row.total{font-weight:800; font-size:16px; color:var(--gold); border-bottom:none;}
+.reveal{background:linear-gradient(135deg,#1d2b16,#243a1a); border:2px solid var(--ok); border-radius:14px; padding:16px; text-align:center; margin-top:12px;}
+.reveal .big{font-size:34px; font-weight:800; color:var(--ok);}
+.small{font-size:12px; color:var(--mut);}
+@media print{ nav.tabs,header,.no-print{display:none!important;} body{background:#fff; color:#000; padding:0;} .card{border:1px solid #ccc;} }
+</style>
+</head>
+<body>
+<header>
+  <h1>⚔️ GLADIADORES <span>· MAESTRA</span></h1>
+  <p>Referidos · Citas · Mapa · Seguimiento · Ilustrador · Línea Recta</p>
+</header>
+
+<!-- ============ HOY ============ -->
+<section class="tab act" id="t-hoy">
+  <div class="kpis">
+    <div class="kpi"><div class="n" id="k-citas">0</div><div class="l">Citas esta semana</div></div>
+    <div class="kpi"><div class="n" id="k-seg">0</div><div class="l">Seguimientos pendientes</div></div>
+    <div class="kpi"><div class="n" id="k-ref">0</div><div class="l">Referidos este mes</div></div>
+    <div class="kpi"><div class="n" id="k-emb">0%</div><div class="l">Meta semanal citas</div></div>
+  </div>
+  <div class="card">
+    <h2>📅 Citas de hoy</h2>
+    <div id="hoy-citas"><p class="small">No hay citas para hoy.</p></div>
+  </div>
+  <div class="card">
+    <h2>🔔 Seguimientos que tocan</h2>
+    <div id="hoy-seg"><p class="small">Nada pendiente. ¡Buen trabajo, gladiador!</p></div>
+  </div>
+  <div class="card">
+    <h2>🎯 Embudo semanal <span class="small">(meta 20 → 15 → 5 → 20)</span></h2>
+    <div id="hoy-embudo"></div>
+    <button class="btn btn-ghost no-print" onclick="go('t-embudo')">Actualizar números</button>
+  </div>
+</section>
+
+<!-- ============ CITAS ============ -->
+<section class="tab" id="t-citas">
+  <div class="card">
+    <h2>📅 Agendar cita</h2>
+    <label>Nombre del cliente</label><input id="c-nombre" placeholder="Ej. María González">
+    <div class="row2">
+      <div><label>Teléfono</label><input id="c-tel" inputmode="tel" placeholder="385..."></div>
+      <div><label>Fecha</label><input id="c-fecha" type="date"></div>
+    </div>
+    <div class="row2">
+      <div><label>Hora</label><input id="c-hora" type="time"></div>
+      <div><label>Tipo</label><select id="c-tipo"><option>Presentación</option><option>Seguimiento</option><option>Cierre</option><option>Referidos</option></select></div>
+    </div>
+    <label>Dirección (para el mapa)</label><input id="c-dir" placeholder="Calle, ciudad, UT">
+    <label>Notas</label><textarea id="c-notas" placeholder="Detalles de la cita..."></textarea>
+    <button class="btn btn-gold" onclick="guardarCita()">Guardar cita</button>
+  </div>
+  <div class="card">
+    <h2>🗂️ Próximas citas</h2>
+    <div id="lista-citas"></div>
+  </div>
+</section>
+
+<!-- ============ MAPA ============ -->
+<section class="tab" id="t-mapa">
+  <div class="card">
+    <h2>🗺️ Mapa de citas</h2>
+    <div class="row2" style="margin-bottom:10px;">
+      <select id="m-filtro" onchange="dibujarMapa()">
+        <option value="hoy">Hoy</option>
+        <option value="semana" selected>Esta semana</option>
+        <option value="todas">Todas</option>
+      </select>
+      <button class="btn btn-gold" style="margin:0; padding:10px;" onclick="optimizarRuta()">Optimizar ruta 🚗</button>
+    </div>
+    <div id="map"></div>
+    <div id="ruta-info" style="margin-top:10px;"></div>
+    <p class="small">Distancias y tiempos aproximados de manejo (ruta real por carretera). Toca un pin para ver la cita y abrir "Cómo llegar".</p>
+  </div>
+</section>
+
+<!-- ============ REFERIDOS ============ -->
+<section class="tab" id="t-refs">
+  <div class="card">
+    <h2>🤝 Nuevo referido</h2>
+    <label>Nombre del referido</label><input id="r-nombre" placeholder="Nombre completo">
+    <div class="row2">
+      <div><label>Teléfono</label><input id="r-tel" inputmode="tel" placeholder="385..."></div>
+      <div><label>¿Quién lo refiere?</label><input id="r-origen" placeholder="Nombre del cliente"></div>
+    </div>
+    <label>Notas</label><input id="r-notas" placeholder="Parentesco, interés...">
+    <button class="btn btn-gold" onclick="guardarRef()">Guardar referido</button>
+  </div>
+  <div class="card">
+    <h2>📋 Referidos guardados</h2>
+    <div id="lista-refs"></div>
+    <div class="row2">
+      <button class="btn btn-wa" onclick="waRefs()">WhatsApp 📲</button>
+      <button class="btn btn-ghost" onclick="window.print()">Imprimir / PDF 🖨️</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SEGUIMIENTO ============ -->
+<section class="tab" id="t-seg">
+  <div class="card">
+    <h2>🔔 Nuevo seguimiento</h2>
+    <div class="row2">
+      <div><label>Nombre</label><input id="s-nombre" placeholder="Cliente o prospecto"></div>
+      <div><label>Teléfono</label><input id="s-tel" inputmode="tel"></div>
+    </div>
+    <div class="row2">
+      <div><label>Etapa</label><select id="s-etapa">
+        <option value="nuevo">Nuevo</option><option value="contacto">Contactado</option>
+        <option value="cita">Cita agendada</option><option value="present">Presentación hecha</option>
+        <option value="cierre">En cierre</option><option value="ganado">Ganado 🎉</option>
+      </select></div>
+      <div><label>Próximo contacto</label><input id="s-fecha" type="date"></div>
+    </div>
+    <label>Nota de seguimiento</label><input id="s-nota" placeholder="Qué sigue: llamar, WhatsApp, visitar...">
+    <button class="btn btn-gold" onclick="guardarSeg()">Guardar</button>
+  </div>
+  <div class="card">
+    <h2>📊 Pipeline</h2>
+    <div id="lista-seg"></div>
+  </div>
+</section>
+
+<!-- ============ ILUSTRADOR ============ -->
+<section class="tab" id="t-ilus">
+  <div class="card">
+    <h2>📊 Ilustrador · Stack de valor familiar</h2>
+    <p class="small">La ilustración que presentas en la cita. Ajusta las coberturas y muestra el costo real.</p>
+    <label>Hospitalización familiar ($)</label><input id="i-hosp" type="number" value="584000">
+    <label>Gastos finales ($)</label><input id="i-final" type="number" value="40000">
+    <label>Protector de ingresos ($)</label><input id="i-ing" type="number" value="60000">
+    <label>Muerte accidental padres ($)</label><input id="i-acc" type="number" value="400000">
+    <label>Cobertura niños ($)</label><input id="i-ninos" type="number" value="40000">
+    <button class="btn btn-gold" onclick="calcIlus()">Calcular ilustración</button>
+    <div id="ilus-out" style="margin-top:12px;"></div>
+  </div>
+  <div class="card">
+    <h2>🎯 Guion de revelación</h2>
+    <div class="mod">
+      <p><b>1. Anclaje:</b> "¿Cuánto paga de seguro de carro al mes?" (≈ $270/mes) — eso solo protege el carro.</p>
+      <p><b>2. Expectativa:</b> "La mayoría piensa que esto cuesta $200–$300 al mes."</p>
+      <p><b>3. Revelación:</b> muestra el número grande de abajo y desglósalo por persona y por semana.</p>
+      <p><b>4. Cierre suave:</b> "¿Quiere ser tomado en cuenta para el programa?" — y silencio.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LÍNEA RECTA ============ -->
+<section class="tab" id="t-recta">
+  <div class="card">
+    <h2>⚡ Entrenamiento Línea Recta</h2>
+    <p class="small">La línea recta es la distancia más corta entre la apertura y el cierre. Apertura en 4 segundos: agudo, entusiasta, experto.</p>
+    <div class="mod">
+      <details open>
+        <summary>🗺️ MAPA — Los fundamentos</summary>
+        <ul>
+          <li><b>Tres dieces:</b> el cliente debe amar el <b>producto</b> → confiar en <b>ti</b> → confiar en la <b>compañía</b>. En ese orden.</li>
+          <li><b>La objeción es diagnóstico,</b> no rechazo. Cada "no" te dice qué parte de los tres dieces falta.</li>
+          <li><b>Fórmula de influencia:</b> 90% técnica (tu presentación) · 40% tono · 10% palabras.</li>
+          <li><b>Mentalidad:</b> "No vendo seguros, protejo familias." No pidas permiso. No te defiendas.</li>
+        </ul>
+      </details>
+      <details>
+        <summary>🧭 GPS — Flujo de presentación (11 pasos)</summary>
+        <ol>
+          <li><b>Presentarse</b> — tono "me interesa", seguridad 7/10. <i>"Buenos días, mi nombre es ___ , soy supervisor(a) del Programa de Protección Infantil..."</i></li>
+          <li><b>Introducción</b> — quién eres y por qué estás ahí.</li>
+          <li><b>Cartas</b> — presenta las cartas del programa.</li>
+          <li><b>Registro del ID</b> — toma sus datos.</li>
+          <li><b>Video</b> — muestra el video del programa.</li>
+          <li><b>GFF</b> — datos de la familia.</li>
+          <li><b>Transición 1</b> — puente a la necesidad.</li>
+          <li><b>Transición 2</b> — puente a la solución.</li>
+          <li><b>Referidos</b> — pide referidos en el momento correcto.</li>
+          <li><b>Cierre 1–10</b> — escala de cierre.</li>
+          <li><b>Cotización</b> — presenta el número.</li>
+        </ol>
+        <p><b>Principio:</b> primero lógica, después emoción.</p>
+      </details>
+      <details>
+        <summary>🎙️ TONO — Las 10 tonalidades</summary>
+        <p>
+          <span class="tono">me interesa</span><span class="tono">afirmación-pregunta</span><span class="tono">misterio</span><span class="tono">escasez</span><span class="tono">seguridad absoluta</span><span class="tono">completa sinceridad</span><span class="tono">hombre razonable</span><span class="tono">dinero aparte</span><span class="tono">obviedad tácita</span><span class="tono">siento tu dolor</span>
+        </p>
+        <p><b>Cierre de tres tonos:</b> firme → humano → razonable. Cambia el tono, no las palabras.</p>
+      </details>
+      <details>
+        <summary>🔁 LOOP — Patrón ante objeciones</summary>
+        <ol>
+          <li><b>Desviar</b> — no choques con la objeción.</li>
+          <li><b>Complementar</b> — valida lo que dijo.</li>
+          <li><b>Verificar</b> — "¿es solo eso lo que le preocupa?"</li>
+          <li><b>Confianza</b> — construye certeza.</li>
+          <li><b>Tú + compañía</b> — refuerza los tres dieces.</li>
+          <li><b>Cerrar</b> — vuelve al cierre.</li>
+        </ol>
+        <p><b>"Déjeme pensarlo":</b> responde con 5 preguntas que revelen la verdadera objeción. Baja el umbral de acción con "películas paralelas". Intensifica con ética. Y sabe cuándo parar.</p>
+      </details>
+      <details>
+        <summary>🧠 MENTE — Mentalidad del cerrador</summary>
+        <ul>
+          <li>No vendo seguros, <b>protejo familias</b>.</li>
+          <li>No pidas permiso para presentar.</li>
+          <li>No te defiendas ante objeciones.</li>
+          <li>La primera objeción no se negocia: <b>se respira</b>.</li>
+        </ul>
+      </details>
+      <details>
+        <summary>🤝 CIERRE — El stack</summary>
+        <ul>
+          <li>Stack de valor total: <b>$1,124,000</b> de protección familiar.</li>
+          <li><b>Anclaje:</b> su seguro de carro ≈ $270/mes solo protege el carro.</li>
+          <li><b>Expectativa:</b> "la mayoría cree que esto cuesta $200–$300/mes".</li>
+          <li><b>Revelación:</b> $92.83/mes → $23.20 por persona → $11.60/semana por persona.</li>
+          <li><b>Reducción y balanza:</b> divide el número hasta que suene obvio.</li>
+          <li><b>Cierre suave:</b> "¿Quiere ser tomado en cuenta para el programa?" → <b>silencio</b>.</li>
+          <li>Pide referidos <b>leyendo la carta en voz alta</b>.</li>
+        </ul>
+      </details>
+      <details>
+        <summary>🎭 PRÁCTICA — Guion con tonos</summary>
+        <p><span class="tono">me interesa</span> "Buenos días, mi nombre es ___ , soy supervisor(a) del Programa de Protección Infantil..."</p>
+        <p><span class="tono">afirmación-pregunta</span> "¿Usted es la persona encargada de proteger a su familia, verdad?"</p>
+        <p><span class="tono">misterio</span> "Lo que le voy a mostrar hoy, casi nadie lo conoce..."</p>
+        <p><span class="tono">seguridad absoluta</span> "Este programa sí le responde a su familia cuando más lo necesita."</p>
+        <p><span class="tono">completa sinceridad</span> "Le hablo claro: sin esto, su familia queda desprotegida."</p>
+        <p><span class="tono">dinero aparte</span> "Olvidemos el dinero un segundo: ¿su familia merece estar protegida?"</p>
+        <p><span class="tono">obviedad tácita</span> "Obviamente, nadie planea faltar... pero los que aman, se preparan."</p>
+        <p><span class="tono">escasez</span> "Este beneficio no está abierto para todos, solo para familias que califican hoy."</p>
+      </details>
+      <details>
+        <summary>✅ DRILL — Checklist diario</summary>
+        <div id="drill"></div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EMBUDO ============ -->
+<section class="tab" id="t-embudo">
+  <div class="card">
+    <h2>🎯 Embudo semanal</h2>
+    <p class="small">Plan: 20 citas agendadas → 12–15 realizadas → 3–5 ventas → 20+ referidos nuevos.</p>
+    <label>Citas agendadas (meta 20)</label><input id="e-ag" type="number" min="0" value="0">
+    <label>Citas realizadas (meta 15)</label><input id="e-re" type="number" min="0" value="0">
+    <label>Ventas cerradas (meta 5)</label><input id="e-ve" type="number" min="0" value="0">
+    <label>Referidos nuevos (meta 20)</label><input id="e-rf" type="number" min="0" value="0">
+    <button class="btn btn-gold" onclick="guardarEmbudo()">Guardar semana</button>
+    <div id="embudo-out" style="margin-top:12px;"></div>
+  </div>
+</section>
+
+<nav class="tabs">
+  <button class="act" onclick="go('t-hoy',this)"><span class="ic">🏠</span>Hoy</button>
+  <button onclick="go('t-citas',this)"><span class="ic">📅</span>Citas</button>
+  <button onclick="go('t-mapa',this)"><span class="ic">🗺️</span>Mapa</button>
+  <button onclick="go('t-refs',this)"><span class="ic">🤝</span>Referidos</button>
+  <button onclick="go('t-seg',this)"><span class="ic">🔔</span>Seguim.</button>
+  <button onclick="go('t-ilus',this)"><span class="ic">📊</span>Ilustrador</button>
+  <button onclick="go('t-recta',this)"><span class="ic">⚡</span>Línea Recta</button>
+  <button onclick="go('t-embudo',this)"><span class="ic">🎯</span>Embudo</button>
+</nav>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* ===== utils ===== */
+const $=id=>document.getElementById(id);
+const load=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v??d;}catch(e){return d;}};
+const save=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+const hoyISO=()=>new Date().toISOString().slice(0,10);
+const fmtFecha=f=>{if(!f)return'';const[a,b,c]=f.split('-');return `${b}/${c}/${a}`;};
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function go(id,btn){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('act'));$(id).classList.add('act');
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('act'));if(btn)btn.classList.add('act');
+  if(id==='t-mapa')setTimeout(()=>{initMap();dibujarMapa();},80); window.scrollTo(0,0);}
+const ETAPAS={nuevo:['Nuevo','b-nuevo'],contacto:['Contactado','b-contacto'],cita:['Cita agendada','b-cita'],present:['Presentación hecha','b-present'],cierre:['En cierre','b-cierre'],ganado:['Ganado 🎉','b-ganado']};
+
+/* ===== CITAS ===== */
+async function geocode(dir){
+  if(!dir)return null;
+  try{
+    const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q='+encodeURIComponent(dir+' Utah'),{headers:{'Accept':'application/json'}});
+    const j=await r.json();
+    if(j&&j.length)return{lat:+j[0].lat,lon:+j[0].lon};
+  }catch(e){}
+  return null;
+}
+async function guardarCita(){
+  const nombre=$('c-nombre').value.trim();
+  if(!nombre){alert('Pon el nombre del cliente');return;}
+  const citas=load('gl_citas',[]);
+  const dir=$('c-dir').value.trim();
+  const c={id:Date.now(),nombre,tel:$('c-tel').value.trim(),fecha:$('c-fecha').value||hoyISO(),
+    hora:$('c-hora').value,tipo:$('c-tipo').value,dir,notas:$('c-notas').value.trim(),lat:null,lon:null};
+  if(dir){const g=await geocode(dir); if(g){c.lat=g.lat;c.lon=g.lon;} else alert('Guardada, pero no encontré la dirección en el mapa. Revísala.');}
+  citas.push(c); save('gl_citas',citas);
+  ['c-nombre','c-tel','c-fecha','c-hora','c-dir','c-notas'].forEach(i=>$(i).value='');
+  renderCitas(); renderHoy();
+}
+function renderCitas(){
+  const citas=load('gl_citas',[]).sort((a,b)=>(a.fecha+a.hora).localeCompare(b.fecha+b.hora));
+  const box=$('lista-citas');
+  if(!citas.length){box.innerHTML='<p class="small">Sin citas agendadas.</p>';return;}
+  box.innerHTML=citas.map(c=>`
+    <div class="item">
+      <div class="t">${esc(c.nombre)} <span class="badge b-cita">${esc(c.tipo)}</span></div>
+      <div class="s">📅 ${fmtFecha(c.fecha)} ${esc(c.hora||'')} ${c.tel?'· 📞 '+esc(c.tel):''}<br>${c.dir?'📍 '+esc(c.dir):'<i class="small">sin dirección</i>'}${c.notas?'<br>📝 '+esc(c.notas):''}</div>
+      <div class="acts">
+        ${c.lat?`<button onclick="verEnMapa(${c.id})">Ver en mapa</button>`:''}
+        ${c.tel?`<button onclick="location.href='tel:${esc(c.tel)}'">Llamar</button><button onclick="window.open('https://wa.me/1${esc(c.tel.replace(/\D/g,''))}')">WhatsApp</button>`:''}
+        <button onclick="borrarCita(${c.id})">Borrar</button>
+      </div>
+    </div>`).join('');
+}
+function borrarCita(id){if(!confirm('¿Borrar esta cita?'))return;save('gl_citas',load('gl_citas',[]).filter(c=>c.id!==id));renderCitas();renderHoy();}
+function verEnMapa(id){const c=load('gl_citas',[]).find(x=>x.id===id);if(!c||!c.lat)return;go('t-mapa',document.querySelectorAll('nav.tabs button')[2]);setTimeout(()=>{if(map){map.setView([c.lat,c.lon],14);}},300);}
+
+/* ===== REFERIDOS ===== */
+function guardarRef(){
+  const nombre=$('r-nombre').value.trim();
+  if(!nombre){alert('Pon el nombre del referido');return;}
+  const refs=load('gl_refs',[]);
+  refs.push({id:Date.now(),nombre,tel:$('r-tel').value.trim(),origen:$('r-origen').value.trim(),notas:$('r-notas').value.trim(),fecha:hoyISO()});
+  save('gl_refs',refs);
+  ['r-nombre','r-tel','r-origen','r-notas'].forEach(i=>$(i).value='');
+  renderRefs(); renderHoy();
+}
+function renderRefs(){
+  const refs=load('gl_refs',[]).slice().reverse();
+  const box=$('lista-refs');
+  if(!refs.length){box.innerHTML='<p class="small">Aún no hay referidos.</p>';return;}
+  box.innerHTML=refs.map(r=>`
+    <div class="item">
+      <div class="t">${esc(r.nombre)}</div>
+      <div class="s">${r.tel?'📞 '+esc(r.tel):''} ${r.origen?'· Refiere: '+esc(r.origen):''}<br><span class="small">${fmtFecha(r.fecha)}${r.notas?' · '+esc(r.notas):''}</span></div>
+      <div class="acts">
+        <button onclick="refASeg(${r.id})">Pasar a seguimiento</button>
+        <button onclick="borrarRef(${r.id})">Borrar</button>
+      </div>
+    </div>`).join('');
+}
+function borrarRef(id){if(!confirm('¿Borrar referido?'))return;save('gl_refs',load('gl_refs',[]).filter(r=>r.id!==id));renderRefs();renderHoy();}
+function refASeg(id){
+  const r=load('gl_refs',[]).find(x=>x.id===id); if(!r)return;
+  const s=load('gl_seg',[]);
+  s.push({id:Date.now(),nombre:r.nombre,tel:r.tel,etapa:'nuevo',fecha:hoyISO(),nota:'Referido por '+(r.origen||'—')});
+  save('gl_seg',s); renderSeg(); renderHoy(); go('t-seg',document.querySelectorAll('nav.tabs button')[4]);
+}
+function waRefs(){
+  const refs=load('gl_refs',[]);
+  if(!refs.length){alert('No hay referidos');return;}
+  const txt='🤝 *REFERIDOS — GLADIADORES*%0A%0A'+refs.map((r,i)=>`${i+1}. ${encodeURIComponent(r.nombre)}${r.tel?' — '+encodeURIComponent(r.tel):''}${r.origen?' (Ref: '+encodeURIComponent(r.origen)+')':''}`).join('%0A');
+  window.open('https://wa.me/?text='+txt,'_blank');
+}
+
+/* ===== SEGUIMIENTO ===== */
+function guardarSeg(){
+  const nombre=$('s-nombre').value.trim();
+  if(!nombre){alert('Pon el nombre');return;}
+  const s=load('gl_seg',[]);
+  s.push({id:Date.now(),nombre,tel:$('s-tel').value.trim(),etapa:$('s-etapa').value,fecha:$('s-fecha').value||hoyISO(),nota:$('s-nota').value.trim()});
+  save('gl_seg',s);
+  ['s-nombre','s-tel','s-fecha','s-nota'].forEach(i=>$(i).value='');
+  renderSeg(); renderHoy();
+}
+function renderSeg(){
+  const s=load('gl_seg',[]).slice().sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  const box=$('lista-seg');
+  if(!s.length){box.innerHTML='<p class="small">Pipeline vacío.</p>';return;}
+  box.innerHTML=s.map(p=>{const[l,cl]=ETAPAS[p.etapa]||ETAPAS.nuevo;const ven=p.fecha<hoyISO()&&p.etapa!=='ganado';
+    return `<div class="item" style="border-left-color:${ven?'var(--bad)':'var(--gold)'}">
+      <div class="t">${esc(p.nombre)} <span class="badge ${cl}">${l}</span>${ven?' <span class="badge" style="background:#4d1d1d;color:#ff9a9a;">ATRASADO</span>':''}</div>
+      <div class="s">🔔 ${fmtFecha(p.fecha)}${p.tel?' · 📞 '+esc(p.tel):''}${p.nota?'<br>📝 '+esc(p.nota):''}</div>
+      <div class="acts">
+        <button onclick="avanzarSeg(${p.id})">Avanzar ➡️</button>
+        ${p.tel?`<button onclick="window.open('https://wa.me/1${esc(p.tel.replace(/\D/g,''))}')">WhatsApp</button>`:''}
+        <button onclick="borrarSeg(${p.id})">Borrar</button>
+      </div>
+    </div>`;}).join('');
+}
+const ORDEN=['nuevo','contacto','cita','present','cierre','ganado'];
+function avanzarSeg(id){
+  const s=load('gl_seg',[]); const p=s.find(x=>x.id===id); if(!p)return;
+  const i=ORDEN.indexOf(p.etapa); if(i<ORDEN.length-1)p.etapa=ORDEN[i+1];
+  save('gl_seg',s); renderSeg(); renderHoy();
+}
+function borrarSeg(id){if(!confirm('¿Borrar?'))return;save('gl_seg',load('gl_seg',[]).filter(x=>x.id!==id));renderSeg();renderHoy();}
+
+/* ===== MAPA ===== */
+let map=null, capa=null;
+const HOME=[40.2969,-111.6946]; // Orem, UT
+function initMap(){
+  if(map){setTimeout(()=>map.invalidateSize(),120);return;}
+  map=L.map('map').setView(HOME,11);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+  L.marker(HOME).addTo(map).bindPopup('<b>🏠 Base (Orem)</b>');
+}
+function citasFiltradas(){
+  const f=$('m-filtro').value, h=hoyISO();
+  let c=load('gl_citas',[]).filter(x=>x.lat);
+  if(f==='hoy')c=c.filter(x=>x.fecha===h);
+  if(f==='semana'){const d=new Date();const ini=new Date(d);ini.setDate(d.getDate()-d.getDay());
+    const fin=new Date(ini);fin.setDate(ini.getDate()+6);
+    c=c.filter(x=>x.fecha>=ini.toISOString().slice(0,10)&&x.fecha<=fin.toISOString().slice(0,10));}
+  return c.sort((a,b)=>(a.fecha+a.hora).localeCompare(b.fecha+b.hora));
+}
+function dibujarMapa(){
+  if(!map)return;
+  if(capa)map.removeLayer(capa); capa=L.layerGroup().addTo(map);
+  const c=citasFiltradas();
+  c.forEach(x=>{
+    L.marker([x.lat,x.lon]).addTo(capa).bindPopup(
+      `<b>${esc(x.nombre)}</b><br>📅 ${fmtFecha(x.fecha)} ${esc(x.hora||'')}<br>📍 ${esc(x.dir||'')}<br><a href="https://www.google.com/maps/dir/?api=1&destination=${x.lat},${x.lon}" target="_blank">Cómo llegar 🚗</a>`);
+  });
+  if(c.length){map.fitBounds(L.latLngBounds(c.map(x=>[x.lat,x.lon]).concat([HOME])),{padding:[30,30]});}
+  $('ruta-info').innerHTML='';
+}
+const hav=(a,b)=>{const R=6371,t=Math.PI/180;
+  const dLa=(b[0]-a[0])*t,dLo=(b[1]-a[1])*t;
+  const h=Math.sin(dLa/2)**2+Math.cos(a[0]*t)*Math.cos(b[0]*t)*Math.sin(dLo/2)**2;
+  return 2*R*Math.asin(Math.sqrt(h));};
+async function tramoKm(a,b){
+  try{
+    const u=`https://router.project-osrm.org/route/v1/driving/${a[1]},${a[0]};${b[1]},${b[0]}?overview=false`;
+    const r=await fetch(u); const j=await r.json();
+    if(j.routes&&j.routes.length)return{km:j.routes[0].distance/1000,min:j.routes[0].duration/60,real:true};
+  }catch(e){}
+  const km=hav(a,b)*1.35;
+  return{km,min:km/45*60,real:false};
+}
+async function optimizarRuta(){
+  const c=citasFiltradas();
+  if(c.length<1){alert('No hay citas con ubicación en este filtro');return;}
+  $('ruta-info').innerHTML='<p class="small">Calculando ruta...</p>';
+  if(capa)map.removeLayer(capa); capa=L.layerGroup().addTo(map);
+  let pts=[HOME].concat(c.map(x=>[x.lat,x.lon]));
+  let totKm=0,totMin=0,real=true,lineas=[];
+  for(let i=0;i<pts.length-1;i++){
+    const t=await tramoKm(pts[i],pts[i+1]);
+    totKm+=t.km; totMin+=t.min; if(!t.real)real=false;
+    lineas.push(`<div class="fila"><span>${i===0?'🏠 Base → '+esc(c[0].nombre):esc(c[i-1].nombre)+' → '+esc(c[i].nombre)}</span><b>${t.km.toFixed(1)} km · ~${Math.round(t.min)} min</b></div>`);
+  }
+  L.polyline(pts,{color:'#f5b301',weight:4}).addTo(capa);
+  pts.forEach((p,i)=>{ if(i===0)return;
+    L.marker(p).addTo(capa).bindPopup(`<b>${i}. ${esc(c[i-1].nombre)}</b><br>📅 ${fmtFecha(c[i-1].fecha)} ${esc(c[i-1].hora||'')}`);});
+  map.fitBounds(L.latLngBounds(pts),{padding:[30,30]});
+  $('ruta-info').innerHTML=`<div class="card" style="margin:0"><h3>🚗 Ruta optimizada (${c.length} citas)</h3>${lineas.join('')}
+    <div class="stack-row total"><span>Total aproximado</span><span>${totKm.toFixed(1)} km · ~${Math.round(totMin)} min</span></div>
+    ${real?'':'<p class="small">*Estimado en línea recta ajustada (sin conexión al servicio de rutas).</p>'}</div>`;
+}
+
+/* ===== ILUSTRADOR ===== */
+function money(n){return '$'+Number(n||0).toLocaleString('en-US');}
+function calcIlus(){
+  const vals=[['Hospitalización familiar',$('i-hosp').value],['Gastos finales',$('i-final').value],
+    ['Protector de ingresos',$('i-ing').value],['Muerte accidental (padres)',$('i-acc').value],['Cobertura niños',$('i-ninos').value]];
+  const total=vals.reduce((a,v)=>a+Number(v[1]||0),0);
+  const mensual=92.83, personas=4;
+  $('ilus-out').innerHTML=vals.map(v=>`<div class="stack-row"><span>${v[0]}</span><b>${money(v[1])}</b></div>`).join('')+
+    `<div class="stack-row total"><span>Protección total</span><span>${money(total)}</span></div>
+     <div class="reveal"><div class="small">TODO ESTO POR SOLO</div><div class="big">$${mensual}/mes</div>
+     <div class="fila" style="justify-content:center;gap:18px;margin-top:8px;"><span>$${(mensual/personas).toFixed(2)} por persona</span><span>$${(mensual/personas/4).toFixed(2)}/semana por persona</span></div></div>`;
+}
+
+/* ===== EMBUDO ===== */
+function guardarEmbudo(){
+  const e={ag:+$('e-ag').value||0,re:+$('e-re').value||0,ve:+$('e-ve').value||0,rf:+$('e-rf').value||0,semana:hoyISO()};
+  save('gl_embudo',e); renderEmbudo(); renderHoy();
+}
+function embudoHTML(e){
+  const barra=(v,m)=>`<div class="bar"><div style="width:${Math.min(100,v/m*100)}%"></div></div><div class="fila"><span>${v} / meta ${m}</span><b>${Math.round(v/m*100)}%</b></div>`;
+  const conv=(a,b)=>b>0?Math.round(a/b*100)+'%':'—';
+  return `<h3>Agendadas</h3>${barra(e.ag,20)}<h3>Realizadas</h3>${barra(e.re,15)}
+    <h3>Ventas</h3>${barra(e.ve,5)}<h3>Referidos nuevos</h3>${barra(e.rf,20)}
+    <div class="fila"><span>Conversión cita→venta</span><b>${conv(e.ve,e.re)}</b></div>
+    <div class="fila"><span>Referidos por venta</span><b>${e.ve>0?(e.rf/e.ve).toFixed(1):'—'}</b></div>`;
+}
+function renderEmbudo(){const e=load('gl_embudo',{ag:0,re:0,ve:0,rf:0});
+  $('e-ag').value=e.ag;$('e-re').value=e.re;$('e-ve').value=e.ve;$('e-rf').value=e.rf;
+  $('embudo-out').innerHTML=embudoHTML(e);}
+
+/* ===== DRILL ===== */
+const DRILL=['1 presentación grabada en video','Repetir el guion palabra por palabra','Practicar las 10 tonalidades','Hacer loops de objeciones en voz alta','Repasar los tres dieces','Practicar el cierre de tres tonos'];
+function renderDrill(){
+  const d=load('gl_drill',{}),h=hoyISO();
+  $('drill').innerHTML=DRILL.map((t,i)=>`<label class="check"><input type="checkbox" ${d[h+i]?'checked':''} onchange="toggleDrill(${i})"> ${t}</label>`).join('');
+}
+function toggleDrill(i){const d=load('gl_drill',{}),h=hoyISO();d[h+i]=!d[h+i];save('gl_drill',d);}
+
+/* ===== HOY ===== */
+function renderHoy(){
+  const h=hoyISO();
+  const citas=load('gl_citas',[]).filter(c=>c.fecha===h).sort((a,b)=>(a.hora||'').localeCompare(b.hora||''));
+  $('k-citas').textContent=citas.length;
+  $('hoy-citas').innerHTML=citas.length?citas.map(c=>`<div class="item"><div class="t">${c.hora||''} · ${esc(c.nombre)}</div><div class="s">${esc(c.tipo)}${c.dir?' · 📍 '+esc(c.dir):''}</div></div>`).join(''):'<p class="small">No hay citas para hoy.</p>';
+  const seg=load('gl_seg',[]).filter(p=>p.fecha<=h&&p.etapa!=='ganado');
+  $('k-seg').textContent=seg.length;
+  $('hoy-seg').innerHTML=seg.length?seg.slice(0,5).map(p=>{const[l,cl]=ETAPAS[p.etapa];return `<div class="item"><div class="t">${esc(p.nombre)} <span class="badge ${cl}">${l}</span></div><div class="s">🔔 ${fmtFecha(p.fecha)}${p.nota?' · '+esc(p.nota):''}</div></div>`;}).join(''):'<p class="small">Nada pendiente. ¡Buen trabajo, gladiador!</p>';
+  const refs=load('gl_refs',[]).filter(r=>(r.fecha||'').slice(0,7)===h.slice(0,7));
+  $('k-ref').textContent=refs.length;
+  const e=load('gl_embudo',{ag:0,re:0,ve:0,rf:0});
+  $('k-emb').textContent=Math.min(100,Math.round(e.ag/20*100))+'%';
+  $('hoy-embudo').innerHTML=embudoHTML(e);
+}
+
+/* ===== INIT ===== */
+renderCitas();renderRefs();renderSeg();renderEmbudo();renderDrill();renderHoy();
+</script>
+</body>
+</html>
