@@ -3,248 +3,624 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gladiadores · App de la Empresa</title>
+<title>Gladiadores · Portal</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
+/* ============ estética delicada tipo Instagram ============ */
 :root{
-  --bg:#f0f2f5; --card:#ffffff; --txt:#1c1e21; --mut:#65676b;
-  --blue:#1877f2; --blue-d:#166fe5; --gold:#b8860b; --gold2:#f5b301;
-  --border:#e4e6eb; --green:#31a24c; --red:#e0245e; --chip:#eef1f4;
+  --bg:#fafafa; --card:#ffffff; --txt:#262626; --mut:#8e8e8e;
+  --border:#dbdbdb; --border-soft:#efefef;
+  --blue:#0095f6; --blue-d:#00376b;
+  --gold:#b8860b; --gold-soft:#faf3df;
+  --green:#1c7c3c; --green-bg:#e8f6ee;
+  --red:#ed4956; --red-bg:#fdeef0;
+  --chip:#efefef;
+  --ig-grad:linear-gradient(45deg,#feda75,#fa7e1e,#d62976,#962fbf,#4f5bd5);
+  --shadow:0 1px 4px rgba(0,0,0,.06);
+  --r:16px;
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  background:var(--bg); color:var(--txt); padding-bottom:74px;}
+  background:var(--bg); color:var(--txt); padding-bottom:78px; font-size:15px; line-height:1.45;}
 /* ---------- header ---------- */
-header.top{position:sticky; top:0; z-index:50; background:var(--card);
-  border-bottom:1px solid var(--border); padding:10px 16px; display:flex; align-items:center; gap:10px;}
-header.top .logo{font-size:26px;}
-header.top h1{margin:0; font-size:18px; font-weight:800;}
+header.top{position:sticky; top:0; z-index:50; background:rgba(255,255,255,.96);
+  border-bottom:1px solid var(--border-soft); padding:11px 16px; display:flex; align-items:center; gap:9px;}
+header.top .logo{font-size:22px;}
+header.top h1{margin:0; font-size:16px; font-weight:700; letter-spacing:.2px;}
 header.top h1 .g{color:var(--gold);}
 header.top p{margin:0; font-size:11px; color:var(--mut);}
 /* ---------- tabs ---------- */
-.tab{display:none; max-width:640px; margin:0 auto;}
+.tab{display:none; max-width:640px; margin:0 auto; padding-bottom:8px;}
 .tab.act{display:block;}
+.empsub,.hsub{display:none;}
+.empsub.act,.hsub.act{display:block;}
+/* ---------- sub nav (chips) ---------- */
+.subnav{display:flex; gap:8px; overflow-x:auto; padding:12px 14px 4px; scrollbar-width:none;}
+.subnav::-webkit-scrollbar{display:none;}
+.subnav button{flex:0 0 auto; border:1px solid var(--border); background:var(--card); border-radius:20px;
+  padding:8px 15px; font-size:13px; font-weight:600; color:var(--txt); cursor:pointer; font-family:inherit;
+  box-shadow:var(--shadow); white-space:nowrap;}
+.subnav button.on{background:var(--txt); color:#fff; border-color:var(--txt);}
 /* ---------- cards / generic ---------- */
-.card{background:var(--card); border-radius:12px; margin:10px 12px; padding:14px;
-  box-shadow:0 1px 2px rgba(0,0,0,.08);}
-.card h2{margin:0 0 10px; font-size:16px;}
+.card{background:var(--card); border:1px solid var(--border-soft); border-radius:var(--r);
+  margin:12px 14px; padding:16px; box-shadow:var(--shadow);}
+.card h2{margin:0 0 10px; font-size:16px; font-weight:700;}
+.card h3{margin:14px 0 8px; font-size:14px; font-weight:700;}
 .small{font-size:12px; color:var(--mut);}
 .mt{margin-top:10px;}
 .row{display:flex; align-items:center; gap:10px;}
+.row2{display:flex; gap:10px;} .row2>*{flex:1;}
 .grow{flex:1;}
-label.fl{display:block; font-size:12px; color:var(--mut); margin:10px 0 4px; font-weight:600;}
-input.fi,select.fi,textarea.fi{width:100%; padding:11px 12px; border-radius:10px;
-  border:1px solid var(--border); background:#f5f6f7; color:var(--txt); font-size:15px; font-family:inherit;}
+.fila{display:flex; justify-content:space-between; align-items:center; padding:8px 0;
+  border-bottom:1px solid var(--border-soft); font-size:14px;}
+.fila:last-child{border-bottom:none;}
+label.fl{display:block; font-size:12px; color:var(--mut); margin:12px 0 5px; font-weight:600;}
+input.fi,select.fi,textarea.fi{width:100%; padding:12px 14px; border-radius:12px;
+  border:1px solid var(--border); background:#fafafa; color:var(--txt); font-size:15px; font-family:inherit;}
+input.fi:focus,select.fi:focus,textarea.fi:focus{outline:none; border-color:#b5b5b5; background:#fff;}
 textarea.fi{min-height:70px; resize:vertical;}
-.btn{display:block; width:100%; padding:12px; margin-top:12px; border:none; border-radius:10px;
+.btn{display:block; width:100%; padding:13px; margin-top:12px; border:none; border-radius:14px;
   font-size:15px; font-weight:700; cursor:pointer; font-family:inherit;}
 .btn-blue{background:var(--blue); color:#fff;}
-.btn-blue:active{background:var(--blue-d);}
+.btn-blue:active{background:#0081d6;}
 .btn-ghost{background:var(--chip); color:var(--txt);}
-.btn-green{background:var(--green); color:#fff;}
-.btn-red{background:#fde8ea; color:var(--red); border:1px solid #f5c2cb;}
-.btn-sm{width:auto; display:inline-block; padding:8px 14px; margin:0; font-size:13px;}
+.btn-green{background:var(--green-bg); color:var(--green);}
+.btn-red{background:var(--red-bg); color:var(--red);}
+.btn-gold{background:linear-gradient(135deg,#d4a017,#b8860b); color:#fff;}
+.btn-wa{background:#25d366; color:#fff;}
+.btn-sm{width:auto; display:inline-block; padding:8px 16px; margin:0; font-size:13px; border-radius:20px;}
 /* ---------- bottom nav ---------- */
-nav.bottom{position:fixed; bottom:0; left:0; right:0; z-index:60; background:var(--card);
-  border-top:1px solid var(--border); display:flex; padding:6px 4px calc(8px + env(safe-area-inset-bottom));}
-nav.bottom button{flex:1; background:none; border:none; color:var(--mut); font-size:10px; font-weight:600;
-  display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:4px 0; font-family:inherit;}
-nav.bottom button svg{width:25px; height:25px;}
-nav.bottom button.act{color:var(--blue);}
+nav.bottom{position:fixed; bottom:0; left:0; right:0; z-index:60; background:#fff;
+  border-top:1px solid var(--border-soft); display:flex; padding:6px 2px calc(8px + env(safe-area-inset-bottom));}
+nav.bottom button{flex:1; background:none; border:none; color:var(--mut); font-size:10px; font-weight:500;
+  display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:5px 0; font-family:inherit;}
+nav.bottom button svg{width:24px; height:24px;}
+nav.bottom button.act{color:var(--txt); font-weight:700;}
+nav.bottom button.act svg .fill{fill:currentColor;}
+/* ---------- kpis ---------- */
+.kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:12px 14px 0;}
+.kpi{background:var(--card); border:1px solid var(--border-soft); border-radius:14px; padding:12px 6px;
+  text-align:center; box-shadow:var(--shadow);}
+.kpi .n{font-size:19px; font-weight:800;}
+.kpi .l{font-size:10px; color:var(--mut); margin-top:3px; line-height:1.3;}
+/* ---------- list items (v1) ---------- */
+.item{background:var(--card); border:1px solid var(--border-soft); border-left:3px solid #d4a017;
+  border-radius:12px; padding:12px 14px; margin-bottom:10px; box-shadow:var(--shadow);}
+.item .t{font-weight:700; font-size:14px;}
+.item .s{font-size:12px; color:var(--mut); margin-top:3px; line-height:1.5;}
+.item .acts{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;}
+.item .acts button{flex:1; min-width:80px; padding:9px 6px; border-radius:10px; border:1px solid var(--border);
+  background:#fafafa; color:var(--txt); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit;}
+.badge{display:inline-block; font-size:10px; font-weight:700; padding:3px 9px; border-radius:10px;
+  background:var(--chip); color:var(--txt); vertical-align:1px;}
+.b-nuevo{background:#e8f1fe; color:#1877f2;} .b-contacto{background:#e8f6ee; color:#1c7c3c;}
+.b-cita{background:#faf3df; color:#8a6d00;} .b-present{background:#f3e8fd; color:#6a3fb5;}
+.b-cierre{background:#fff1e0; color:#b25e00;} .b-ganado{background:#e8f6ee; color:#1c7c3c;}
 /* ---------- stories ---------- */
-.stories{display:flex; gap:12px; overflow-x:auto; padding:12px 14px 6px; background:var(--card);
-  border-bottom:1px solid var(--border); margin-bottom:2px;}
-.story{flex:0 0 auto; width:64px; text-align:center; cursor:pointer; background:none; border:none; font-family:inherit; padding:0;}
-.story .ring{width:60px; height:60px; border-radius:50%; padding:3px;
-  background:conic-gradient(from 180deg, var(--gold2), var(--gold), #ffe08a, var(--gold2));}
+.stories{display:flex; gap:14px; overflow-x:auto; padding:14px 16px 10px; background:var(--card);
+  border-bottom:1px solid var(--border-soft); scrollbar-width:none;}
+.stories::-webkit-scrollbar{display:none;}
+.story{flex:0 0 auto; width:66px; text-align:center; cursor:pointer; background:none; border:none;
+  font-family:inherit; padding:0;}
+.story .ring{width:62px; height:62px; border-radius:50%; padding:2.5px; background:var(--ig-grad);}
 .story .av{width:100%; height:100%; border-radius:50%; background:#fff; display:flex; align-items:center;
-  justify-content:center; font-weight:800; font-size:20px; color:#fff; border:3px solid #fff;}
-.story span.nm{display:block; font-size:10px; color:var(--mut); margin-top:4px;
+  justify-content:center; font-weight:700; font-size:20px; color:#fff; border:2.5px solid #fff;}
+.story span.nm{display:block; font-size:10px; color:var(--mut); margin-top:5px;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 /* ---------- composer ---------- */
-.composer{background:var(--card); border-radius:12px; margin:10px 12px; padding:12px 14px;
-  box-shadow:0 1px 2px rgba(0,0,0,.08);}
-.composer textarea{border:none; background:#f5f6f7; border-radius:18px; padding:10px 14px;}
+.composer{background:var(--card); border:1px solid var(--border-soft); border-radius:var(--r);
+  margin:12px 14px; padding:14px; box-shadow:var(--shadow);}
+.composer textarea{border:1px solid var(--border-soft); background:#fafafa; border-radius:14px;
+  padding:11px 14px; font-size:14px;}
 .typechips{display:flex; gap:8px; margin:10px 0 2px; flex-wrap:wrap;}
-.typechips button{border:1px solid var(--border); background:#fff; border-radius:18px; padding:7px 12px;
+.typechips button{border:1px solid var(--border); background:#fff; border-radius:18px; padding:7px 13px;
   font-size:13px; cursor:pointer; font-family:inherit; color:var(--txt);}
-.typechips button.on{background:#e7f0fe; border-color:var(--blue); color:var(--blue); font-weight:700;}
+.typechips button.on{background:#eef7ff; border-color:var(--blue); color:var(--blue); font-weight:700;}
 /* ---------- feed posts ---------- */
-.post{background:var(--card); border-radius:12px; margin:10px 12px; padding:12px 14px;
-  box-shadow:0 1px 2px rgba(0,0,0,.08);}
-.post .ph{display:flex; align-items:center; gap:10px;}
+.post{background:var(--card); border:1px solid var(--border-soft); border-radius:var(--r);
+  margin:12px 14px; padding:14px 16px; box-shadow:var(--shadow);}
+.post .ph{display:flex; align-items:center; gap:11px;}
 .av{width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-  font-weight:800; color:#fff; font-size:17px; flex:0 0 auto;}
+  font-weight:700; color:#fff; font-size:17px; flex:0 0 auto;}
 .post .pn{font-weight:700; font-size:14px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;}
 .post .pt{font-size:12px; color:var(--mut);}
-.badge-empresa{background:linear-gradient(135deg,var(--gold2),var(--gold)); color:#3d2f00; font-size:10px;
-  font-weight:800; padding:3px 8px; border-radius:10px; letter-spacing:.5px;}
-.post .ptext{font-size:15px; margin:10px 0 6px; line-height:1.45; white-space:pre-wrap;}
-.post .actions{display:flex; gap:4px; border-top:1px solid var(--border); margin-top:8px; padding-top:6px;}
-.post .actions button{flex:1; background:none; border:none; color:var(--mut); font-size:13px; font-weight:600;
-  padding:8px; border-radius:8px; cursor:pointer; font-family:inherit; display:flex; align-items:center;
-  justify-content:center; gap:6px;}
-.post .actions button:active{background:var(--chip);}
+.badge-empresa{background:linear-gradient(135deg,#d4a017,#b8860b); color:#fff; font-size:10px;
+  font-weight:800; padding:3px 9px; border-radius:10px; letter-spacing:.5px;}
+.post .ptext{font-size:14.5px; margin:11px 0 6px; line-height:1.5; white-space:pre-wrap;}
+.post .actions{display:flex; gap:4px; border-top:1px solid var(--border-soft); margin-top:9px; padding-top:5px;}
+.post .actions button,.post .actions a{flex:1; background:none; border:none; color:var(--mut); font-size:13px;
+  font-weight:600; padding:9px; border-radius:8px; cursor:pointer; font-family:inherit; display:flex;
+  align-items:center; justify-content:center; gap:6px; text-decoration:none;}
+.post .actions button:active{background:#f5f5f5;}
 .post .actions button.liked{color:var(--red);}
-.comments{border-top:1px solid var(--border); margin-top:6px; padding-top:8px;}
-.comment{display:flex; gap:8px; margin:8px 0; font-size:13px;}
-.comment .cb{background:#f5f6f7; border-radius:12px; padding:8px 12px; flex:1;}
+.comments{border-top:1px solid var(--border-soft); margin-top:6px; padding-top:9px;}
+.comment{display:flex; gap:9px; margin:9px 0; font-size:13px;}
+.comment .cb{background:#f5f5f5; border-radius:14px; padding:9px 13px; flex:1;}
 .comment .cb b{font-size:12px;}
-.comment .cb p{margin:2px 0 0;}
-.cform{display:flex; gap:8px; margin-top:8px;}
-.cform input{flex:1; border:1px solid var(--border); border-radius:18px; padding:9px 14px; font-size:14px; font-family:inherit;}
-.cform button{border:none; background:var(--blue); color:#fff; border-radius:18px; padding:0 16px;
-  font-weight:700; cursor:pointer; font-family:inherit;}
-/* ---------- segments / chips ---------- */
-.seg{display:flex; background:var(--card); margin:10px 12px 0; border-radius:12px; padding:4px;
-  box-shadow:0 1px 2px rgba(0,0,0,.08);}
-.seg button{flex:1; border:none; background:none; padding:10px; border-radius:9px; font-size:14px;
+.comment .cb p{margin:3px 0 0;}
+.cform{display:flex; gap:8px; margin-top:9px;}
+.cform input{flex:1; border:1px solid var(--border); border-radius:20px; padding:10px 15px;
+  font-size:14px; font-family:inherit; background:#fafafa;}
+.cform button{border:none; background:var(--blue); color:#fff; border-radius:20px; padding:0 18px;
+  font-weight:700; cursor:pointer; font-family:inherit; font-size:15px;}
+/* ---------- segments ---------- */
+.seg{display:flex; background:var(--card); margin:12px 14px 0; border:1px solid var(--border-soft);
+  border-radius:14px; padding:4px; box-shadow:var(--shadow);}
+.seg button{flex:1; border:none; background:none; padding:10px 6px; border-radius:10px; font-size:13px;
   font-weight:600; color:var(--mut); cursor:pointer; font-family:inherit;}
-.seg button.on{background:#e7f0fe; color:var(--blue); font-weight:800;}
-.fchips{display:flex; gap:8px; overflow-x:auto; padding:10px 12px 2px;}
+.seg button.on{background:var(--txt); color:#fff; font-weight:700;}
+.fchips{display:flex; gap:8px; overflow-x:auto; padding:12px 14px 2px; scrollbar-width:none;}
+.fchips::-webkit-scrollbar{display:none;}
 .fchips button{flex:0 0 auto; border:1px solid var(--border); background:var(--card); border-radius:18px;
-  padding:8px 14px; font-size:13px; cursor:pointer; font-family:inherit; color:var(--txt);}
+  padding:8px 15px; font-size:13px; cursor:pointer; font-family:inherit; color:var(--txt); box-shadow:var(--shadow);}
 .fchips button.on{background:var(--txt); color:#fff; border-color:var(--txt); font-weight:700;}
-/* ---------- referrals ---------- */
-.ref{background:var(--card); border-radius:12px; margin:10px 12px; padding:14px;
-  box-shadow:0 1px 2px rgba(0,0,0,.08);}
+/* ---------- referrals (social) ---------- */
+.ref{background:var(--card); border:1px solid var(--border-soft); border-radius:var(--r);
+  margin:12px 14px; padding:15px; box-shadow:var(--shadow);}
 .ref .rn{font-weight:700; font-size:15px;}
-.ref .rd{font-size:13px; color:var(--mut); margin-top:3px;}
-.chip{display:inline-block; font-size:11px; font-weight:700; padding:4px 10px; border-radius:12px; margin-top:8px;}
-.st-nuevo{background:#e7f0fe; color:var(--blue);}
-.st-aceptado{background:#e6f7ec; color:#1c7c3c;}
-.st-contactado{background:#fff4d6; color:#8a6d00;}
-.st-cerrado{background:#e9e2f7; color:#5b2d91;}
-.ref .rbtns{display:flex; gap:8px; margin-top:10px;}
+.ref .rd{font-size:13px; color:var(--mut); margin-top:4px;}
+.chip{display:inline-block; font-size:11px; font-weight:700; padding:4px 11px; border-radius:12px; margin-top:9px;}
+.st-nuevo{background:#e8f1fe; color:#1877f2;}
+.st-aceptado{background:#e8f6ee; color:#1c7c3c;}
+.st-contactado{background:#faf3df; color:#8a6d00;}
+.st-cerrado{background:#f3e8fd; color:#6a3fb5;}
+.ref .rbtns{display:flex; gap:8px; margin-top:11px;}
 .ref .rbtns .btn{margin-top:0;}
-.asig{font-size:11px; color:var(--gold); font-weight:700; margin-top:8px;}
+.asig{font-size:11px; color:var(--gold); font-weight:700; margin-top:9px;}
 /* ---------- videos ---------- */
-.vgrid{display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:4px 12px 12px;}
-.vcard{background:var(--card); border-radius:12px; overflow:hidden; box-shadow:0 1px 2px rgba(0,0,0,.08);
-  cursor:pointer; border:none; padding:0; text-align:left; font-family:inherit; color:var(--txt);}
+.vgrid{display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:6px 14px 12px;}
+.vcard{background:var(--card); border:1px solid var(--border-soft); border-radius:14px; overflow:hidden;
+  box-shadow:var(--shadow); cursor:pointer; padding:0; text-align:left; font-family:inherit; color:var(--txt);}
 .vthumb{position:relative; aspect-ratio:16/9; display:flex; align-items:center; justify-content:center;
-  background:linear-gradient(135deg,#2b3a55,#101820);}
-.vthumb.nolink{background:linear-gradient(135deg,#8a6d00,#3d2f00);}
-.vthumb .play{width:46px; height:46px; border-radius:50%; background:rgba(255,255,255,.92);
-  display:flex; align-items:center; justify-content:center; font-size:18px; color:#1c1e21;}
-.vthumb .pend{position:absolute; bottom:6px; left:6px; right:6px; font-size:10px; color:#fff;
-  background:rgba(0,0,0,.55); border-radius:8px; padding:4px 8px; text-align:center;}
+  background:linear-gradient(135deg,#e9e4f5,#cfc3ec);}
+.vthumb.nolink{background:linear-gradient(135deg,#f3e3b3,#e0c56e);}
+.vthumb .play{width:46px; height:46px; border-radius:50%; background:rgba(255,255,255,.95);
+  display:flex; align-items:center; justify-content:center; font-size:17px; color:var(--txt);
+  box-shadow:0 2px 8px rgba(0,0,0,.15);}
+.vthumb .pend{position:absolute; bottom:6px; left:6px; right:6px; font-size:10px; color:#5c4a00;
+  background:rgba(255,255,255,.9); border-radius:8px; padding:4px 8px; text-align:center; font-weight:600;}
 .vmeta{padding:10px 12px;}
-.vmeta .vt{font-weight:700; font-size:13px; line-height:1.3;}
-.vmeta .vc{font-size:11px; color:var(--mut); margin-top:4px;}
-.vcat{font-size:10px; font-weight:800; padding:3px 8px; border-radius:10px; background:#e7f0fe; color:var(--blue);}
+.vmeta .vt{font-weight:700; font-size:13px; line-height:1.35;}
+.vmeta .vc{font-size:11px; color:var(--mut); margin-top:5px;}
+.vcat{font-size:10px; font-weight:800; padding:3px 9px; border-radius:10px; background:#eef7ff; color:var(--blue);}
 /* ---------- team ---------- */
-.acard{background:var(--card); border-radius:12px; margin:10px 12px; padding:14px;
-  box-shadow:0 1px 2px rgba(0,0,0,.08); cursor:pointer; border:none; width:calc(100% - 24px);
-  text-align:left; font-family:inherit; color:var(--txt); display:block;}
-.acard .stats{display:flex; margin-top:10px; border-top:1px solid var(--border); padding-top:10px;}
+.acard{background:var(--card); border:1px solid var(--border-soft); border-radius:var(--r);
+  margin:12px 14px; padding:15px; box-shadow:var(--shadow); cursor:pointer;
+  width:calc(100% - 28px); text-align:left; font-family:inherit; color:var(--txt); display:block;}
+.acard .stats{display:flex; margin-top:11px; border-top:1px solid var(--border-soft); padding-top:11px;}
 .acard .stats div{flex:1; text-align:center;}
 .acard .stats .n{font-weight:800; font-size:15px;}
 .acard .stats .l{font-size:10px; color:var(--mut);}
 /* ---------- profile ---------- */
-.cover{height:120px; background:linear-gradient(135deg,#3d2f00,var(--gold2) 60%,#ffe08a); border-radius:0 0 16px 16px;}
-.pwrap{max-width:640px; margin:0 auto; padding:0 16px;}
-.pav{width:96px; height:96px; border-radius:50%; border:4px solid #fff; margin-top:-48px;
-  display:flex; align-items:center; justify-content:center; font-size:34px; font-weight:800; color:#fff;
-  box-shadow:0 2px 6px rgba(0,0,0,.2);}
-.pname{font-size:20px; font-weight:800; margin:8px 0 0;}
+.cover{height:110px; background:linear-gradient(135deg,#fdf6e3,#f7e8c4 55%,#efdbb0);}
+.pwrap{max-width:640px; margin:0 auto; padding:0 16px 10px;}
+.pav{width:92px; height:92px; border-radius:50%; border:4px solid #fff; margin-top:-46px;
+  display:flex; align-items:center; justify-content:center; font-size:32px; font-weight:700; color:#fff;
+  box-shadow:0 2px 10px rgba(0,0,0,.12);}
+.pname{font-size:19px; font-weight:800; margin:9px 0 0;}
 .prole{font-size:13px; color:var(--mut);}
-.pstats{display:flex; background:var(--card); border-radius:12px; margin:12px 0; padding:12px 4px;
-  box-shadow:0 1px 2px rgba(0,0,0,.08);}
+.pstats{display:flex; background:var(--card); border:1px solid var(--border-soft); border-radius:var(--r);
+  margin:13px 0; padding:13px 4px; box-shadow:var(--shadow);}
 .pstats div{flex:1; text-align:center;}
-.pstats .n{font-weight:800; font-size:17px;}
-.pstats .l{font-size:11px; color:var(--mut);}
+.pstats .n{font-weight:800; font-size:16px;}
+.pstats .l{font-size:10px; color:var(--mut);}
 .subtabs{display:flex; gap:8px; margin:4px 0 2px;}
-.subtabs button{flex:1; border:1px solid var(--border); background:var(--card); border-radius:10px;
-  padding:10px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; color:var(--txt);}
+.subtabs button{flex:1; border:1px solid var(--border); background:var(--card); border-radius:12px;
+  padding:10px 4px; font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; color:var(--txt);
+  box-shadow:var(--shadow);}
 .subtabs button.on{background:var(--txt); color:#fff; border-color:var(--txt);}
-.note{background:#fff8e1; border:1px solid #f0d878; border-radius:12px; margin:12px; padding:12px 14px;
-  font-size:12px; color:#6b5a00; line-height:1.5;}
+.note{background:var(--gold-soft); border:1px solid #eed9a4; border-radius:14px; margin:12px 14px;
+  padding:13px 15px; font-size:12px; color:#7a5f14; line-height:1.55;}
 /* ---------- modal ---------- */
 #modal{position:fixed; inset:0; z-index:100; display:none; align-items:flex-end; justify-content:center;
-  background:rgba(0,0,0,.5);}
+  background:rgba(0,0,0,.45);}
 #modal.open{display:flex;}
 .sheet{background:#fff; width:100%; max-width:640px; max-height:88vh; overflow-y:auto;
-  border-radius:18px 18px 0 0; padding:18px 16px calc(20px + env(safe-area-inset-bottom)); animation:up .22s ease;}
+  border-radius:20px 20px 0 0; padding:20px 18px calc(22px + env(safe-area-inset-bottom)); animation:up .22s ease;}
 @keyframes up{from{transform:translateY(40px); opacity:.6;} to{transform:none; opacity:1;}}
 .sheet h2{margin:0 0 8px; font-size:17px;}
 .sheet .x{float:right; border:none; background:var(--chip); width:32px; height:32px; border-radius:50%;
-  font-size:16px; cursor:pointer;}
-.vframe{position:relative; width:100%; aspect-ratio:16/9; background:#000; border-radius:12px; overflow:hidden;}
+  font-size:15px; cursor:pointer; color:var(--txt);}
+.vframe{position:relative; width:100%; aspect-ratio:16/9; background:#000; border-radius:14px; overflow:hidden;}
 .vframe iframe{position:absolute; inset:0; width:100%; height:100%; border:0;}
-.empty{text-align:center; color:var(--mut); padding:26px 12px; font-size:14px;}
+.empty{text-align:center; color:var(--mut); padding:28px 14px; font-size:14px;}
+#agentview{display:none; position:fixed; inset:0; z-index:90; background:var(--bg); overflow-y:auto;}
+/* ---------- ilustrador / recta / embudo ---------- */
+.stack-row{display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--border-soft); font-size:14px;}
+.stack-row.total{font-weight:800; font-size:16px; border-bottom:none;}
+.reveal{background:linear-gradient(135deg,#f2fbf5,#e2f5e9); border:1.5px solid #bfe6cd; border-radius:var(--r);
+  padding:18px; text-align:center; margin-top:14px;}
+.reveal .big{font-size:34px; font-weight:800; color:var(--green);}
+.mod p{font-size:14px; margin:9px 0;}
+.mod ul,.mod ol{font-size:14px; padding-left:20px; margin:9px 0;}
+.mod li{margin:6px 0;}
+.tono{display:inline-block; background:var(--gold-soft); color:#8a6d00; font-size:11px; font-weight:600;
+  padding:3px 10px; border-radius:12px; margin:2px 3px 2px 0;}
+.check{display:flex; align-items:center; gap:11px; padding:10px 4px; border-bottom:1px solid var(--border-soft); font-size:14px;}
+.check input{width:22px; height:22px; accent-color:var(--blue);}
+details{background:#fafafa; border:1px solid var(--border-soft); border-radius:12px; margin-bottom:9px; overflow:hidden;}
+details summary{padding:13px 15px; font-weight:700; font-size:14px; cursor:pointer; list-style:none;}
+details summary::-webkit-details-marker{display:none;}
+details summary::after{content:'›'; float:right; color:var(--mut); font-size:18px; transform:rotate(90deg);}
+details[open] summary::after{transform:rotate(-90deg);}
+details .mod{padding:0 15px 13px;}
+.bar{background:var(--chip); border-radius:8px; height:10px; overflow:hidden; margin:6px 0 4px;}
+.bar>div{height:100%; background:linear-gradient(90deg,#d4a017,#f0c93f); border-radius:8px; transition:width .4s;}
+#map{height:300px; border-radius:14px; border:1px solid var(--border-soft); z-index:1;}
+/* ---------- aprender ---------- */
+.learn-frame{width:calc(100% - 28px); margin:0 14px 14px; height:80vh; border:1px solid var(--border-soft);
+  border-radius:var(--r); background:#fff; box-shadow:var(--shadow);}
 </style>
 </head>
 <body>
 
 <header class="top">
   <div class="logo">⚔️</div>
-  <div><h1>Gladiadores <span class="g">· Empresa</span></h1><p>Red del equipo · Agencia de seguros</p></div>
+  <div><h1>Gladiadores <span class="g">· Portal</span></h1><p>Todo tu negocio en un solo lugar</p></div>
 </header>
 
-<!-- ================= INICIO ================= -->
+<!-- ================= INICIO (personal) ================= -->
 <section class="tab act" id="tab-inicio">
-  <div class="stories" id="stories"></div>
-  <div class="composer">
-    <div class="row">
-      <div class="av" id="composer-av"></div>
-      <textarea class="fi grow" id="composer-text" placeholder="Comparte un logro con el equipo..."></textarea>
+  <div class="kpis">
+    <div class="kpi"><div class="n" id="k-citas">0</div><div class="l">Citas de hoy</div></div>
+    <div class="kpi"><div class="n" id="k-seg">0</div><div class="l">Seguimientos pendientes</div></div>
+    <div class="kpi"><div class="n" id="k-ref">0</div><div class="l">Referidos este mes</div></div>
+    <div class="kpi"><div class="n" id="k-emb">0%</div><div class="l">Meta semanal citas</div></div>
+  </div>
+  <div class="card">
+    <h2>📅 Citas de hoy</h2>
+    <div id="hoy-citas"><p class="small">No hay citas para hoy.</p></div>
+  </div>
+  <div class="card">
+    <h2>🔔 Seguimientos que tocan</h2>
+    <div id="hoy-seg"><p class="small">Nada pendiente. ¡Buen trabajo, gladiador!</p></div>
+  </div>
+  <div class="card">
+    <h2>🎯 Embudo semanal</h2>
+    <div id="hoy-embudo"></div>
+    <button class="btn btn-ghost" onclick="App.hgo('h-embudo')">Actualizar números</button>
+  </div>
+  <div class="card">
+    <h2>📝 Reporte del día</h2>
+    <div id="hoy-rep"></div>
+    <button class="btn btn-ghost" onclick="App.hgo('h-reporte')">Llenar reporte</button>
+  </div>
+</section>
+
+<!-- ================= EMPRESA (red social) ================= -->
+<section class="tab" id="tab-empresa">
+  <div class="subnav" id="emp-subnav">
+    <button data-s="feed" class="on" onclick="App.empSub('feed',this)">📰 Feed</button>
+    <button data-s="refs" onclick="App.empSub('refs',this)">🤝 Referidos</button>
+    <button data-s="vids" onclick="App.empSub('vids',this)">🎬 Videos</button>
+    <button data-s="equipo" onclick="App.empSub('equipo',this)">👥 Equipo</button>
+  </div>
+
+  <div class="empsub act" id="emp-feed">
+    <div class="stories" id="stories"></div>
+    <div class="composer">
+      <div class="row">
+        <div class="av" id="composer-av"></div>
+        <textarea class="fi grow" id="composer-text" placeholder="Comparte un logro con el equipo..."></textarea>
+      </div>
+      <div class="typechips" id="composer-types">
+        <button data-t="venta" class="on">🎉 Venta cerrada</button>
+        <button data-t="tip">💡 Tip educativo</button>
+        <button data-t="texto">📣 Publicación</button>
+      </div>
+      <button class="btn btn-blue" onclick="App.publish()">Publicar</button>
     </div>
-    <div class="typechips" id="composer-types">
-      <button data-t="venta" class="on">🎉 Venta cerrada</button>
-      <button data-t="tip">💡 Tip educativo</button>
-      <button data-t="texto">📣 Publicación</button>
+    <div id="feed"></div>
+  </div>
+
+  <div class="empsub" id="emp-refs">
+    <div class="seg" id="ref-seg">
+      <button data-s="asignados" class="on" onclick="App.refSeg('asignados',this)">📥 Asignados por la empresa</button>
+      <button data-s="mios" onclick="App.refSeg('mios',this)">📤 Mis referidos</button>
     </div>
-    <button class="btn btn-blue" onclick="App.publish()">Publicar</button>
+    <div class="note">💡 <b>Modo local:</b> por ahora los referidos viven en este dispositivo. Para que la empresa asigne referidos de verdad a todo el equipo se necesita una base de datos compartida.</div>
+    <div id="ref-list"></div>
+    <div class="card">
+      <h2>➕ Subir referido</h2>
+      <label class="fl">Nombre del referido</label><input class="fi" id="rf-nombre" placeholder="Nombre completo">
+      <div class="row2"><div><label class="fl">Teléfono</label><input class="fi" id="rf-tel" inputmode="tel" placeholder="385..."></div>
+      <div><label class="fl">¿Quién lo refiere?</label><input class="fi" id="rf-origen" placeholder="Nombre"></div></div>
+      <label class="fl">Notas</label><input class="fi" id="rf-notas" placeholder="Parentesco, interés...">
+      <button class="btn btn-blue" onclick="App.addReferral()">Guardar referido</button>
+      <button class="btn btn-wa" onclick="App.shareRefsWA()">Compartir mis referidos por WhatsApp 📲</button>
+    </div>
   </div>
-  <div id="feed"></div>
+
+  <div class="empsub" id="emp-vids">
+    <div class="fchips" id="vid-cats">
+      <button data-c="todos" class="on" onclick="App.vidCat('todos',this)">Todos</button>
+      <button data-c="Educativo" onclick="App.vidCat('Educativo',this)">📚 Educativo</button>
+      <button data-c="Ventas" onclick="App.vidCat('Ventas',this)">💼 Ventas</button>
+      <button data-c="Producto" onclick="App.vidCat('Producto',this)">🛡️ Producto</button>
+    </div>
+    <div class="note">🎬 <b>Por ahora los videos se agregan por enlace</b> (YouTube o Vimeo). Toca una tarjeta sin enlace para pegarlo.</div>
+    <div class="vgrid" id="vgrid"></div>
+    <div class="card">
+      <h2>⬆️ Subir video</h2>
+      <label class="fl">Título</label><input class="fi" id="vd-titulo" placeholder="Ej. Cómo presentar la protección familiar">
+      <label class="fl">Categoría</label>
+      <select class="fi" id="vd-cat"><option>Educativo</option><option>Ventas</option><option>Producto</option></select>
+      <label class="fl">Enlace de YouTube o Vimeo (opcional)</label><input class="fi" id="vd-url" inputmode="url" placeholder="https://...">
+      <button class="btn btn-blue" onclick="App.addVideo()">Agregar video</button>
+    </div>
+  </div>
+
+  <div class="empsub" id="emp-equipo">
+    <div class="card">
+      <input class="fi" id="team-q" placeholder="🔍 Buscar agente..." oninput="App.renderTeam()">
+      <label class="fl">Filtrar por equipo</label>
+      <select class="fi" id="team-f" onchange="App.renderTeam()"><option value="">Todos los equipos</option></select>
+    </div>
+    <div id="team-list"></div>
+  </div>
 </section>
 
-<!-- ================= REFERIDOS ================= -->
-<section class="tab" id="tab-referidos">
-  <div class="seg" id="ref-seg">
-    <button data-s="asignados" class="on" onclick="App.refSeg('asignados',this)">📥 Asignados por la empresa</button>
-    <button data-s="mios" onclick="App.refSeg('mios',this)">📤 Mis referidos</button>
+<!-- ================= HERRAMIENTAS (módulos personales) ================= -->
+<section class="tab" id="tab-herramientas">
+  <div class="subnav" id="herr-subnav">
+    <button data-s="citas" class="on" onclick="App.hSub('citas',this)">📅 Citas</button>
+    <button data-s="mapa" onclick="App.hSub('mapa',this)">🗺️ Mapa</button>
+    <button data-s="seg" onclick="App.hSub('seg',this)">🔔 Seguimiento</button>
+    <button data-s="ilus" onclick="App.hSub('ilus',this)">📊 Ilustrador</button>
+    <button data-s="recta" onclick="App.hSub('recta',this)">⚡ Línea Recta</button>
+    <button data-s="embudo" onclick="App.hSub('embudo',this)">🎯 Embudo</button>
+    <button data-s="reporte" onclick="App.hSub('reporte',this)">📝 Reporte</button>
   </div>
-  <div class="note" style="margin:10px 12px 0;">💡 <b>Modo local:</b> por ahora los referidos viven en este dispositivo. Para que la empresa asigne referidos de verdad a todo el equipo se necesita una base de datos compartida.</div>
-  <div id="ref-list"></div>
-  <div class="card">
-    <h2>➕ Subir referido</h2>
-    <label class="fl">Nombre del referido</label><input class="fi" id="rf-nombre" placeholder="Nombre completo">
-    <div class="row"><div class="grow"><label class="fl">Teléfono</label><input class="fi" id="rf-tel" inputmode="tel" placeholder="385..."></div>
-    <div class="grow"><label class="fl">¿Quién lo refiere?</label><input class="fi" id="rf-origen" placeholder="Nombre"></div></div>
-    <label class="fl">Notas</label><input class="fi" id="rf-notas" placeholder="Parentesco, interés...">
-    <button class="btn btn-blue" onclick="App.addReferral()">Guardar referido</button>
+
+  <div class="hsub act" id="h-citas">
+    <div class="card">
+      <h2>📅 Agendar cita</h2>
+      <label class="fl">Nombre del cliente</label><input class="fi" id="c-nombre" placeholder="Ej. María González">
+      <div class="row2">
+        <div><label class="fl">Teléfono</label><input class="fi" id="c-tel" inputmode="tel" placeholder="385..."></div>
+        <div><label class="fl">Fecha</label><input class="fi" id="c-fecha" type="date"></div>
+      </div>
+      <div class="row2">
+        <div><label class="fl">Hora</label><input class="fi" id="c-hora" type="time"></div>
+        <div><label class="fl">Tipo</label><select class="fi" id="c-tipo"><option>Presentación</option><option>Seguimiento</option><option>Cierre</option><option>Referidos</option></select></div>
+      </div>
+      <label class="fl">Dirección (para el mapa)</label><input class="fi" id="c-dir" placeholder="Calle, ciudad, UT">
+      <label class="fl">Notas</label><textarea class="fi" id="c-notas" placeholder="Detalles de la cita..."></textarea>
+      <button class="btn btn-gold" onclick="guardarCita()">Guardar cita</button>
+    </div>
+    <div class="card">
+      <h2>🗂️ Próximas citas</h2>
+      <div id="lista-citas"></div>
+    </div>
+  </div>
+
+  <div class="hsub" id="h-mapa">
+    <div class="card">
+      <h2>🗺️ Mapa de citas</h2>
+      <div class="row2" style="margin-bottom:10px;">
+        <select class="fi" id="m-filtro" onchange="dibujarMapa()">
+          <option value="hoy">Hoy</option>
+          <option value="semana" selected>Esta semana</option>
+          <option value="todas">Todas</option>
+        </select>
+        <button class="btn btn-gold" style="margin:0;" onclick="optimizarRuta()">Optimizar ruta 🚗</button>
+      </div>
+      <div id="map"></div>
+      <div id="ruta-info" style="margin-top:10px;"></div>
+      <p class="small">Distancias y tiempos aproximados de manejo (ruta real por carretera). Toca un pin para ver la cita y abrir "Cómo llegar".</p>
+    </div>
+  </div>
+
+  <div class="hsub" id="h-seg">
+    <div class="card">
+      <h2>🔔 Nuevo seguimiento</h2>
+      <div class="row2">
+        <div><label class="fl">Nombre</label><input class="fi" id="s-nombre" placeholder="Cliente o prospecto"></div>
+        <div><label class="fl">Teléfono</label><input class="fi" id="s-tel" inputmode="tel"></div>
+      </div>
+      <div class="row2">
+        <div><label class="fl">Etapa</label><select class="fi" id="s-etapa">
+          <option value="nuevo">Nuevo</option><option value="contacto">Contactado</option>
+          <option value="cita">Cita agendada</option><option value="present">Presentación hecha</option>
+          <option value="cierre">En cierre</option><option value="ganado">Ganado 🎉</option>
+        </select></div>
+        <div><label class="fl">Próximo contacto</label><input class="fi" id="s-fecha" type="date"></div>
+      </div>
+      <label class="fl">Nota de seguimiento</label><input class="fi" id="s-nota" placeholder="Qué sigue: llamar, WhatsApp, visitar...">
+      <button class="btn btn-gold" onclick="guardarSeg()">Guardar</button>
+    </div>
+    <div class="card">
+      <h2>📊 Pipeline</h2>
+      <div id="lista-seg"></div>
+    </div>
+  </div>
+
+  <div class="hsub" id="h-ilus">
+    <div class="card">
+      <h2>📊 Ilustrador · Stack de valor familiar</h2>
+      <p class="small">La ilustración que presentas en la cita. Ajusta las coberturas y muestra el costo real.</p>
+      <label class="fl">Hospitalización familiar ($)</label><input class="fi" id="i-hosp" type="number" value="584000">
+      <label class="fl">Gastos finales ($)</label><input class="fi" id="i-final" type="number" value="40000">
+      <label class="fl">Protector de ingresos ($)</label><input class="fi" id="i-ing" type="number" value="60000">
+      <label class="fl">Muerte accidental padres ($)</label><input class="fi" id="i-acc" type="number" value="400000">
+      <label class="fl">Cobertura niños ($)</label><input class="fi" id="i-ninos" type="number" value="40000">
+      <button class="btn btn-gold" onclick="calcIlus()">Calcular ilustración</button>
+      <div id="ilus-out" style="margin-top:12px;"></div>
+    </div>
+    <div class="card">
+      <h2>🎯 Guion de revelación</h2>
+      <div class="mod">
+        <p><b>1. Anclaje:</b> "¿Cuánto paga de seguro de carro al mes?" (≈ $270/mes) — eso solo protege el carro.</p>
+        <p><b>2. Expectativa:</b> "La mayoría piensa que esto cuesta $200–$300 al mes."</p>
+        <p><b>3. Revelación:</b> muestra el número grande de abajo y desglósalo por persona y por semana.</p>
+        <p><b>4. Cierre suave:</b> "¿Quiere ser tomado en cuenta para el programa?" — y silencio.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="hsub" id="h-recta">
+    <div class="card">
+      <h2>⚡ Entrenamiento Línea Recta</h2>
+      <p class="small">La línea recta es la distancia más corta entre la apertura y el cierre. Apertura en 4 segundos: agudo, entusiasta, experto.</p>
+      <div class="mod">
+        <details open>
+          <summary>🗺️ MAPA — Los fundamentos</summary>
+          <div class="mod">
+          <ul>
+            <li><b>Tres dieces:</b> el cliente debe amar el <b>producto</b> → confiar en <b>ti</b> → confiar en la <b>compañía</b>. En ese orden.</li>
+            <li><b>La objeción es diagnóstico,</b> no rechazo. Cada "no" te dice qué parte de los tres dieces falta.</li>
+            <li><b>Fórmula de influencia:</b> 90% técnica (tu presentación) · 40% tono · 10% palabras.</li>
+            <li><b>Mentalidad:</b> "No vendo seguros, protejo familias." No pidas permiso. No te defiendas.</li>
+          </ul>
+          </div>
+        </details>
+        <details>
+          <summary>🧭 GPS — Flujo de presentación (11 pasos)</summary>
+          <div class="mod">
+          <ol>
+            <li><b>Presentarse</b> — tono "me interesa", seguridad 7/10. <i>"Buenos días, mi nombre es ___ , soy supervisor(a) del Programa de Protección Infantil..."</i></li>
+            <li><b>Introducción</b> — quién eres y por qué estás ahí.</li>
+            <li><b>Cartas</b> — presenta las cartas del programa.</li>
+            <li><b>Registro del ID</b> — toma sus datos.</li>
+            <li><b>Video</b> — muestra el video del programa.</li>
+            <li><b>GFF</b> — datos de la familia.</li>
+            <li><b>Transición 1</b> — puente a la necesidad.</li>
+            <li><b>Transición 2</b> — puente a la solución.</li>
+            <li><b>Referidos</b> — pide referidos en el momento correcto.</li>
+            <li><b>Cierre 1–10</b> — escala de cierre.</li>
+            <li><b>Cotización</b> — presenta el número.</li>
+          </ol>
+          <p><b>Principio:</b> primero lógica, después emoción.</p>
+          </div>
+        </details>
+        <details>
+          <summary>🎙️ TONO — Las 10 tonalidades</summary>
+          <div class="mod">
+          <p>
+            <span class="tono">me interesa</span><span class="tono">afirmación-pregunta</span><span class="tono">misterio</span><span class="tono">escasez</span><span class="tono">seguridad absoluta</span><span class="tono">completa sinceridad</span><span class="tono">hombre razonable</span><span class="tono">dinero aparte</span><span class="tono">obviedad tácita</span><span class="tono">siento tu dolor</span>
+          </p>
+          <p><b>Cierre de tres tonos:</b> firme → humano → razonable. Cambia el tono, no las palabras.</p>
+          </div>
+        </details>
+        <details>
+          <summary>🔁 LOOP — Patrón ante objeciones</summary>
+          <div class="mod">
+          <ol>
+            <li><b>Desviar</b> — no choques con la objeción.</li>
+            <li><b>Complementar</b> — valida lo que dijo.</li>
+            <li><b>Verificar</b> — "¿es solo eso lo que le preocupa?"</li>
+            <li><b>Confianza</b> — construye certeza.</li>
+            <li><b>Tú + compañía</b> — refuerza los tres dieces.</li>
+            <li><b>Cerrar</b> — vuelve al cierre.</li>
+          </ol>
+          <p><b>"Déjeme pensarlo":</b> responde con 5 preguntas que revelen la verdadera objeción. Baja el umbral de acción con "películas paralelas". Intensifica con ética. Y sabe cuándo parar.</p>
+          </div>
+        </details>
+        <details>
+          <summary>🧠 MENTE — Mentalidad del cerrador</summary>
+          <div class="mod">
+          <ul>
+            <li>No vendo seguros, <b>protejo familias</b>.</li>
+            <li>No pidas permiso para presentar.</li>
+            <li>No te defiendas ante objeciones.</li>
+            <li>La primera objeción no se negocia: <b>se respira</b>.</li>
+          </ul>
+          </div>
+        </details>
+        <details>
+          <summary>🤝 CIERRE — El stack</summary>
+          <div class="mod">
+          <ul>
+            <li>Stack de valor total: <b>$1,124,000</b> de protección familiar.</li>
+            <li><b>Anclaje:</b> su seguro de carro ≈ $270/mes solo protege el carro.</li>
+            <li><b>Expectativa:</b> "la mayoría cree que esto cuesta $200–$300/mes".</li>
+            <li><b>Revelación:</b> $92.83/mes → $23.20 por persona → $11.60/semana por persona.</li>
+            <li><b>Reducción y balanza:</b> divide el número hasta que suene obvio.</li>
+            <li><b>Cierre suave:</b> "¿Quiere ser tomado en cuenta para el programa?" → <b>silencio</b>.</li>
+            <li>Pide referidos <b>leyendo la carta en voz alta</b>.</li>
+          </ul>
+          </div>
+        </details>
+        <details>
+          <summary>🎭 PRÁCTICA — Guion con tonos</summary>
+          <div class="mod">
+          <p><span class="tono">me interesa</span> "Buenos días, mi nombre es ___ , soy supervisor(a) del Programa de Protección Infantil..."</p>
+          <p><span class="tono">afirmación-pregunta</span> "¿Usted es la persona encargada de proteger a su familia, verdad?"</p>
+          <p><span class="tono">misterio</span> "Lo que le voy a mostrar hoy, casi nadie lo conoce..."</p>
+          <p><span class="tono">seguridad absoluta</span> "Este programa sí le responde a su familia cuando más lo necesita."</p>
+          <p><span class="tono">completa sinceridad</span> "Le hablo claro: sin esto, su familia queda desprotegida."</p>
+          <p><span class="tono">dinero aparte</span> "Olvidemos el dinero un segundo: ¿su familia merece estar protegida?"</p>
+          <p><span class="tono">obviedad tácita</span> "Obviamente, nadie planea faltar... pero los que aman, se preparan."</p>
+          <p><span class="tono">escasez</span> "Este beneficio no está abierto para todos, solo para familias que califican hoy."</p>
+          </div>
+        </details>
+        <details>
+          <summary>✅ DRILL — Checklist diario</summary>
+          <div class="mod"><div id="drill"></div></div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <div class="hsub" id="h-embudo">
+    <div class="card">
+      <h2>🎯 Embudo semanal</h2>
+      <p class="small">Plan: 20 citas agendadas → 12–15 realizadas → 3–5 ventas → 20+ referidos nuevos.</p>
+      <label class="fl">Citas agendadas (meta 20)</label><input class="fi" id="e-ag" type="number" min="0" value="0">
+      <label class="fl">Citas realizadas (meta 15)</label><input class="fi" id="e-re" type="number" min="0" value="0">
+      <label class="fl">Ventas cerradas (meta 5)</label><input class="fi" id="e-ve" type="number" min="0" value="0">
+      <label class="fl">Referidos nuevos (meta 20)</label><input class="fi" id="e-rf" type="number" min="0" value="0">
+      <button class="btn btn-gold" onclick="guardarEmbudo()">Guardar semana</button>
+      <div id="embudo-out" style="margin-top:12px;"></div>
+    </div>
+  </div>
+
+  <div class="hsub" id="h-reporte">
+    <div class="card">
+      <h2>📝 Reporte diario</h2>
+      <p class="small">Tu registro diario estilo Gladiators. Llena tus números al terminar el día.</p>
+      <label class="fl">Agente</label>
+      <div class="row">
+        <select class="fi grow" id="rp-agente" onchange="save('gl_agente_actual',this.value);renderHoy()"></select>
+        <button class="btn btn-ghost btn-sm" onclick="nuevoAgente()">＋</button>
+      </div>
+      <label class="fl">Fecha</label><input class="fi" id="rp-fecha" type="date">
+      <div class="row2">
+        <div><label class="fl">Citas agendadas</label><input class="fi" id="rp-ag" type="number" min="0" value="0"></div>
+        <div><label class="fl">Citas realizadas</label><input class="fi" id="rp-re" type="number" min="0" value="0"></div>
+      </div>
+      <div class="row2">
+        <div><label class="fl">Presentaciones</label><input class="fi" id="rp-pr" type="number" min="0" value="0"></div>
+        <div><label class="fl">Ventas cerradas</label><input class="fi" id="rp-ve" type="number" min="0" value="0"></div>
+      </div>
+      <div class="row2">
+        <div><label class="fl">ALP vendido ($)</label><input class="fi" id="rp-alp" type="number" min="0" value="0"></div>
+        <div><label class="fl">Referidos obtenidos</label><input class="fi" id="rp-rf" type="number" min="0" value="0"></div>
+      </div>
+      <button class="btn btn-gold" onclick="guardarReporte()">Guardar reporte del día</button>
+    </div>
+    <div class="card">
+      <h2>📊 Resumen de la semana</h2>
+      <label class="fl">Reporte personal de</label>
+      <select class="fi" id="rp-ver" onchange="renderReportes()"></select>
+      <div id="rep-semana" style="margin-top:10px;"></div>
+      <button class="btn btn-wa" onclick="waReporte()">Enviar reporte por WhatsApp 📲</button>
+    </div>
+    <div class="card">
+      <h2>🗂️ Últimos reportes</h2>
+      <div id="lista-rep"></div>
+    </div>
   </div>
 </section>
 
-<!-- ================= VIDEOS ================= -->
-<section class="tab" id="tab-videos">
-  <div class="fchips" id="vid-cats">
-    <button data-c="todos" class="on" onclick="App.vidCat('todos',this)">Todos</button>
-    <button data-c="Educativo" onclick="App.vidCat('Educativo',this)">📚 Educativo</button>
-    <button data-c="Ventas" onclick="App.vidCat('Ventas',this)">💼 Ventas</button>
-    <button data-c="Producto" onclick="App.vidCat('Producto',this)">🛡️ Producto</button>
-  </div>
-  <div class="note" style="margin:8px 12px;">🎬 <b>Por ahora los videos se agregan por enlace</b> (YouTube o Vimeo). Toca una tarjeta sin enlace para pegarlo.</div>
-  <div class="vgrid" id="vgrid"></div>
+<!-- ================= APRENDER ================= -->
+<section class="tab" id="tab-aprender">
   <div class="card">
-    <h2>⬆️ Subir video</h2>
-    <label class="fl">Título</label><input class="fi" id="vd-titulo" placeholder="Ej. Cómo presentar la protección familiar">
-    <label class="fl">Categoría</label>
-    <select class="fi" id="vd-cat"><option>Educativo</option><option>Ventas</option><option>Producto</option></select>
-    <label class="fl">Enlace de YouTube o Vimeo (opcional)</label><input class="fi" id="vd-url" inputmode="url" placeholder="https://...">
-    <button class="btn btn-blue" onclick="App.addVideo()">Agregar video</button>
+    <h2>📚 Herramienta de estudio</h2>
+    <p class="small">PrepSeguro Utah — tu material de estudio para el examen, integrado aquí mismo.</p>
+    <button class="btn btn-blue" onclick="window.open('https://josedavidpg99-hash.github.io/HERRAMIENTA-DE-ESTUDIO/','_blank')">Abrir en pestaña nueva ↗</button>
   </div>
-</section>
-
-<!-- ================= EQUIPO ================= -->
-<section class="tab" id="tab-equipo">
-  <div class="card">
-    <input class="fi" id="team-q" placeholder="🔍 Buscar agente..." oninput="App.renderTeam()">
-    <label class="fl">Filtrar por equipo</label>
-    <select class="fi" id="team-f" onchange="App.renderTeam()"><option value="">Todos los equipos</option></select>
-  </div>
-  <div id="team-list"></div>
+  <iframe class="learn-frame" src="https://josedavidpg99-hash.github.io/HERRAMIENTA-DE-ESTUDIO/" title="Herramienta de estudio PrepSeguro"></iframe>
 </section>
 
 <!-- ================= PERFIL ================= -->
@@ -267,29 +643,32 @@ nav.bottom button.act{color:var(--blue);}
 
 <nav class="bottom" id="bottomnav">
   <button class="act" data-tab="tab-inicio" onclick="App.go('tab-inicio',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Inicio</button>
-  <button data-tab="tab-referidos" onclick="App.go('tab-referidos',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>Referidos</button>
-  <button data-tab="tab-videos" onclick="App.go('tab-videos',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z" fill="currentColor" stroke="none"/></svg>Videos</button>
-  <button data-tab="tab-equipo" onclick="App.go('tab-equipo',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Equipo</button>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path class="fill" d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Inicio</button>
+  <button data-tab="tab-empresa" onclick="App.go('tab-empresa',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path class="fill" d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1m4 0h1M9 13h1m4 0h1M9 17h1m4 0h1"/></svg>Empresa</button>
+  <button data-tab="tab-herramientas" onclick="App.go('tab-herramientas',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path class="fill" d="M14.7 6.3a4.5 4.5 0 0 0-6 6L3 18l3 3 5.7-5.7a4.5 4.5 0 0 0 6-6L14 13l-3-3 3.7-3.7z"/></svg>Herramientas</button>
+  <button data-tab="tab-aprender" onclick="App.go('tab-aprender',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path class="fill" d="M22 10 12 5 2 10l10 5 10-5zM6 12v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/></svg>Aprender</button>
   <button data-tab="tab-perfil" onclick="App.go('tab-perfil',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="9" r="3.2"/><path d="M6.5 19a5.5 5.5 0 0 1 11 0"/></svg>Perfil</button>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle class="fill" cx="12" cy="12" r="9"/><circle cx="12" cy="9" r="3.2"/><path d="M6.5 19a5.5 5.5 0 0 1 11 0"/></svg>Perfil</button>
 </nav>
 
 <div id="modal"><div class="sheet" id="sheet"></div></div>
-<div id="agentview" style="display:none;position:fixed;inset:0;z-index:90;background:var(--bg);overflow-y:auto;"></div>
+<div id="agentview"></div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 /* ============================================================
-   DB — capa de datos local (localStorage, clave "agencia_db_v1")
+   DB — capa de datos local
    ------------------------------------------------------------
-   PUNTO DE SINCRONIZACIÓN: para que la empresa asigne referidos
-   de verdad a todo el equipo, reemplaza DB.load/DB.save por
-   llamadas a Supabase o a una API REST aquí. Todo el resto de la
-   app usa DB.getAgents(), DB.savePost(), etc., así que el cambio
-   queda aislado en este objeto.
+   PUNTO DE SINCRONIZACIÓN: la parte social vive en localStorage
+   bajo la clave "agencia_db_v1" y las herramientas personales
+   bajo claves "gl_*". Para conectar una base de datos compartida
+   (Supabase / API REST), reemplaza DB.load/DB.save/DB.pget/DB.pset
+   por llamadas al backend aquí. Todo el resto de la app usa
+   DB.getAgents(), DB.savePost(), DB.pget(), etc., así que el
+   cambio queda aislado en este objeto.
    ============================================================ */
 const LS_KEY = 'agencia_db_v1';
 const H = 3600e3, D = 24 * H;
@@ -298,7 +677,7 @@ function seed() {
   const now = Date.now();
   return {
     agents: [
-      {id:'yo', name:'Jose David Pacheco', team:'Gladiadores Alpha', role:'Supervisor', clients:34, salesMonth:6, alp:4250, color:'#1877f2', followers:['a2','a3','a5','a7'], following:['a2','a3','a4']},
+      {id:'yo', name:'Jose David Pacheco', team:'Gladiadores Alpha', role:'Supervisor', clients:34, salesMonth:6, alp:4250, color:'#0095f6', followers:['a2','a3','a5','a7'], following:['a2','a3','a4']},
       {id:'a2', name:'Ana Martínez', team:'Gladiadores Alpha', role:'Agente', clients:41, salesMonth:8, alp:6100, color:'#e91e63', followers:['yo','a3'], following:['yo','a4']},
       {id:'a3', name:'Carlos Ruiz', team:'Gladiadores Alpha', role:'Agente', clients:28, salesMonth:5, alp:3800, color:'#9c27b0', followers:['yo'], following:['yo','a2']},
       {id:'a4', name:'Lucía Fernández', team:'Gladiadores Beta', role:'Agente', clients:35, salesMonth:7, alp:5200, color:'#ff5722', followers:['yo','a6'], following:['a2']},
@@ -344,6 +723,10 @@ const DB = {
     this.save();
   },
   save() { try { localStorage.setItem(LS_KEY, JSON.stringify(this.data)); } catch (e) {} },
+  /* almacenamiento personal (claves gl_*) */
+  pget(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? d; } catch (e) { return d; } },
+  pset(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+  /* social */
   getAgents() { return this.data.agents.filter(a => !a.company); },
   getAgent(id) { return this.data.agents.find(a => a.id === id); },
   me() { return this.getAgent('yo'); },
@@ -379,11 +762,17 @@ const DB = {
 };
 
 /* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const load = (k, d) => DB.pget(k, d);
+const save = (k, v) => DB.pset(k, v);
+const hoyISO = () => new Date().toISOString().slice(0, 10);
+const fmtFecha = f => { if (!f) return ''; const [a, b, c] = f.split('-'); return `${b}/${c}/${a}`; };
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function uid(p) { return p + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36); }
 function initials(name) { return name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join(''); }
 function firstName(name) { return name.split(/\s+/)[0]; }
 function fmtMoney(n) { return '$' + Number(n || 0).toLocaleString('en-US'); }
+function money(n) { return fmtMoney(n); }
 function haceCuanto(ts) {
   const s = (Date.now() - ts) / 1000;
   if (s < 60) return 'ahora mismo';
@@ -397,9 +786,9 @@ function avatarHTML(a, size) {
   const label = a.company ? '⚔️' : esc(initials(a.name));
   return '<div class="av" style="width:' + size + 'px;height:' + size + 'px;background:' + a.color + ';font-size:' + Math.round(size * 0.38) + 'px;">' + label + '</div>';
 }
-function openSheet(html) { document.getElementById('sheet').innerHTML = html; document.getElementById('modal').classList.add('open'); }
-function closeSheet() { document.getElementById('modal').classList.remove('open'); }
-document.getElementById('modal').addEventListener('click', function (e) { if (e.target.id === 'modal') closeSheet(); });
+function openSheet(html) { $('sheet').innerHTML = html; $('modal').classList.add('open'); }
+function closeSheet() { $('modal').classList.remove('open'); }
+$('modal').addEventListener('click', function (e) { if (e.target.id === 'modal') closeSheet(); });
 function embedURL(url) {
   if (!url) return '';
   let m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{6,})/);
@@ -419,31 +808,52 @@ const App = {
   composerType: 'venta',
   openComments: {},
 
+  /* ---------- navegación ---------- */
   go(tab, btn) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('act'));
-    document.getElementById(tab).classList.add('act');
+    $(tab).classList.add('act');
     document.querySelectorAll('nav.bottom button').forEach(b => b.classList.remove('act'));
-    if (btn) btn.classList.add('act'); else {
-      const b = document.querySelector('nav.bottom button[data-tab="' + tab + '"]');
-      if (b) b.classList.add('act');
-    }
+    if (btn) btn.classList.add('act');
+    else { const b = document.querySelector('nav.bottom button[data-tab="' + tab + '"]'); if (b) b.classList.add('act'); }
     window.scrollTo(0, 0);
-    if (tab === 'tab-equipo') this.renderTeam();
+    if (tab === 'tab-empresa') { this.renderStories(); this.renderFeed(); this.renderRefs(); this.renderVideos(); this.renderTeam(); }
     if (tab === 'tab-perfil') this.renderProfile();
+    if (tab === 'tab-herramientas') setTimeout(() => { if (map) map.invalidateSize(); }, 120);
+    if (tab === 'tab-inicio') renderHoy();
+  },
+  empSub(name, btn) {
+    document.querySelectorAll('#emp-subnav button').forEach(b => b.classList.remove('on'));
+    if (btn) btn.classList.add('on');
+    document.querySelectorAll('.empsub').forEach(s => s.classList.remove('act'));
+    $('emp-' + name).classList.add('act');
+    if (name === 'equipo') this.renderTeam();
+    window.scrollTo(0, 0);
+  },
+  hgo(sub) {
+    this.go('tab-herramientas');
+    const btn = document.querySelector('#herr-subnav button[data-s="' + sub + '"]');
+    this.hSub(sub, btn);
+  },
+  hSub(name, btn) {
+    document.querySelectorAll('#herr-subnav button').forEach(b => b.classList.remove('on'));
+    if (btn) btn.classList.add('on');
+    document.querySelectorAll('.hsub').forEach(s => s.classList.remove('act'));
+    $('h-' + name).classList.add('act');
+    if (name === 'mapa') setTimeout(() => { initMap(); dibujarMapa(); }, 90);
+    window.scrollTo(0, 0);
   },
 
-  /* ---------- INICIO ---------- */
+  /* ---------- FEED ---------- */
   renderStories() {
     const agents = DB.getAgents().slice(0, 8);
-    document.getElementById('stories').innerHTML = agents.map(a =>
+    $('stories').innerHTML = agents.map(a =>
       '<button class="story" onclick="App.openAgent(\'' + a.id + '\')">' +
       '<span class="ring"><span class="av" style="background:' + a.color + '">' + esc(initials(a.name)) + '</span></span>' +
       '<span class="nm">' + esc(firstName(a.name)) + '</span></button>'
     ).join('');
     const me = DB.me();
-    document.getElementById('composer-av').outerHTML = avatarHTML(me, 40).replace('class="av"', 'class="av" id="composer-av"');
+    $('composer-av').outerHTML = avatarHTML(me, 40).replace('class="av"', 'class="av" id="composer-av"');
   },
-
   postCard(p) {
     const a = DB.getAgent(p.by) || DB.getAgent('empresa');
     const liked = p.likes.includes('yo');
@@ -459,7 +869,7 @@ const App = {
       '<button class="' + (liked ? 'liked' : '') + '" onclick="App.toggleLike(\'' + p.id + '\')">' +
       (liked ? '❤️' : '🤍') + ' Me gusta' + (p.likes.length ? ' (' + p.likes.length + ')' : '') + '</button>' +
       '<button onclick="App.toggleComments(\'' + p.id + '\')">💬 Comentar' + (p.comments.length ? ' (' + p.comments.length + ')' : '') + '</button>' +
-      '<a href="https://wa.me/?text=' + waText + '" target="_blank" rel="noopener" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;color:var(--mut);font-size:13px;font-weight:600;padding:8px;text-decoration:none;">📲 Compartir</a>' +
+      '<a href="https://wa.me/?text=' + waText + '" target="_blank" rel="noopener">📲 Compartir</a>' +
       '</div>';
     if (comOpen) {
       html += '<div class="comments">' + p.comments.map(c => {
@@ -471,21 +881,18 @@ const App = {
     }
     return html + '</div>';
   },
-
   renderFeed() {
     const posts = DB.data.posts.slice().sort((a, b) => b.ts - a.ts);
-    document.getElementById('feed').innerHTML = posts.length ? posts.map(p => this.postCard(p)).join('')
+    $('feed').innerHTML = posts.length ? posts.map(p => this.postCard(p)).join('')
       : '<div class="empty">Aún no hay publicaciones. ¡Sé el primero! 🎉</div>';
   },
-
   setComposerType(t, btn) {
     this.composerType = t;
     document.querySelectorAll('#composer-types button').forEach(b => b.classList.remove('on'));
     btn.classList.add('on');
   },
-
   publish() {
-    const ta = document.getElementById('composer-text');
+    const ta = $('composer-text');
     let text = ta.value.trim();
     const t = this.composerType;
     if (t === 'venta') {
@@ -500,11 +907,10 @@ const App = {
     ta.value = '';
     this.renderFeed(); this.renderProfile();
   },
-
   toggleLike(id) { DB.likePost(id, 'yo'); this.renderFeed(); },
   toggleComments(id) { this.openComments[id] = !this.openComments[id]; this.renderFeed(); },
   addComment(id) {
-    const inp = document.getElementById('c-' + id);
+    const inp = $('c-' + id);
     const text = inp.value.trim(); if (!text) return;
     DB.addComment(id, { by: 'yo', text: text, ts: Date.now() });
     this.openComments[id] = true; this.renderFeed();
@@ -514,13 +920,11 @@ const App = {
   refSeg(s, btn) {
     this.refSegCur = s;
     document.querySelectorAll('#ref-seg button').forEach(b => b.classList.remove('on'));
-    btn.classList.add('on');
+    if (btn) btn.classList.add('on');
     this.renderRefs();
   },
-
   statusLabel(s) { return { nuevo: 'Nuevo', aceptado: 'Aceptado', contactado: 'Contactado', cerrado: 'Cerrado' }[s] || s; },
   nextStatus(s) { return { nuevo: 'contactado', contactado: 'cerrado', cerrado: 'nuevo', aceptado: 'contactado' }[s] || 'nuevo'; },
-
   refCard(r) {
     const assigned = r.assignedBy === 'empresa';
     let btns = '';
@@ -537,44 +941,48 @@ const App = {
       (assigned ? '<div class="asig">🏢 Asignado por la empresa · ' + haceCuanto(r.ts) + '</div>' : '') +
       btns + '</div>';
   },
-
   renderRefs() {
     const all = DB.data.referrals.slice().sort((a, b) => b.ts - a.ts);
     const list = this.refSegCur === 'asignados'
       ? all.filter(r => r.assignedBy === 'empresa')
       : all.filter(r => r.assignedBy === 'yo');
-    document.getElementById('ref-list').innerHTML = list.length ? list.map(r => this.refCard(r)).join('')
+    $('ref-list').innerHTML = list.length ? list.map(r => this.refCard(r)).join('')
       : '<div class="empty">No hay referidos aquí todavía.</div>';
   },
-
   acceptRef(id) { DB.updateReferral(id, { assignedBy: 'yo', status: 'aceptado' }); this.renderRefs(); },
   rejectRef(id) { if (confirm('¿Rechazar este referido asignado?')) { DB.deleteReferral(id); this.renderRefs(); } },
   cycleRef(id) { const r = DB.data.referrals.find(x => x.id === id); if (r) { DB.updateReferral(id, { status: this.nextStatus(r.status) }); this.renderRefs(); this.renderProfile(); } },
-
   addReferral() {
-    const name = document.getElementById('rf-nombre').value.trim();
+    const name = $('rf-nombre').value.trim();
     if (!name) { alert('Ponle un nombre al referido.'); return; }
     DB.saveReferral({
       id: uid('r'), name: name,
-      phone: document.getElementById('rf-tel').value.trim(),
-      referredBy: document.getElementById('rf-origen').value.trim(),
-      notes: document.getElementById('rf-notas').value.trim(),
+      phone: $('rf-tel').value.trim(),
+      referredBy: $('rf-origen').value.trim(),
+      notes: $('rf-notas').value.trim(),
       assignedBy: 'yo', status: 'nuevo', ts: Date.now()
     });
-    ['rf-nombre', 'rf-tel', 'rf-origen', 'rf-notas'].forEach(i => document.getElementById(i).value = '');
+    ['rf-nombre', 'rf-tel', 'rf-origen', 'rf-notas'].forEach(i => $(i).value = '');
     if (this.refSegCur !== 'mios') this.refSeg('mios', document.querySelector('#ref-seg button[data-s="mios"]'));
     else this.renderRefs();
     this.renderProfile();
+  },
+  shareRefsWA() {
+    const list = DB.data.referrals.filter(r => r.assignedBy === 'yo');
+    if (!list.length) { alert('No tienes referidos para compartir.'); return; }
+    const txt = '🤝 *MIS REFERIDOS — GLADIADORES*%0A%0A' + list.map((r, i) =>
+      `${i + 1}. ${encodeURIComponent(r.name)}${r.phone ? ' — ' + encodeURIComponent(r.phone) : ''} (${encodeURIComponent(this.statusLabel(r.status))})`
+    ).join('%0A');
+    window.open('https://wa.me/?text=' + txt, '_blank');
   },
 
   /* ---------- VIDEOS ---------- */
   vidCat(c, btn) {
     this.vidCatCur = c;
     document.querySelectorAll('#vid-cats button').forEach(b => b.classList.remove('on'));
-    btn.classList.add('on');
+    if (btn) btn.classList.add('on');
     this.renderVideos();
   },
-
   videoCard(v) {
     const a = DB.getAgent(v.by) || DB.getAgent('empresa');
     const has = !!v.url;
@@ -584,13 +992,11 @@ const App = {
       '<div class="vmeta"><div class="vt">' + esc(v.title) + '</div>' +
       '<div class="vc"><span class="vcat">' + esc(v.cat) + '</span> · ' + esc(firstName(a.name)) + ' · ' + haceCuanto(v.ts) + '</div></div></button>';
   },
-
   renderVideos() {
     const list = DB.data.videos.filter(v => this.vidCatCur === 'todos' || v.cat === this.vidCatCur);
-    document.getElementById('vgrid').innerHTML = list.length ? list.map(v => this.videoCard(v)).join('')
+    $('vgrid').innerHTML = list.length ? list.map(v => this.videoCard(v)).join('')
       : '<div class="empty" style="grid-column:1/-1;">No hay videos en esta categoría.</div>';
   },
-
   openVideo(id) {
     const v = DB.data.videos.find(x => x.id === id); if (!v) return;
     const a = DB.getAgent(v.by) || DB.getAgent('empresa');
@@ -605,35 +1011,33 @@ const App = {
       '<p class="small">' + esc(v.cat) + ' · por ' + esc(a.name) + '</p>' +
       '<div class="vframe"><iframe src="' + esc(embedURL(v.url)) + '" allowfullscreen allow="accelerometer; autoplay; encrypted-media; picture-in-picture"></iframe></div>');
   },
-
   saveVideoURL(id) {
-    const url = document.getElementById('vu-url').value.trim();
+    const url = $('vu-url').value.trim();
     if (!url) { alert('Pega el enlace del video.'); return; }
     DB.updateVideo(id, { url: url });
     closeSheet(); this.renderVideos(); this.renderProfile();
   },
-
   addVideo() {
-    const title = document.getElementById('vd-titulo').value.trim();
+    const title = $('vd-titulo').value.trim();
     if (!title) { alert('Ponle un título al video.'); return; }
     DB.saveVideo({
       id: uid('v'), title: title,
-      cat: document.getElementById('vd-cat').value,
-      by: 'yo', url: document.getElementById('vd-url').value.trim(), ts: Date.now()
+      cat: $('vd-cat').value,
+      by: 'yo', url: $('vd-url').value.trim(), ts: Date.now()
     });
-    document.getElementById('vd-titulo').value = '';
-    document.getElementById('vd-url').value = '';
+    $('vd-titulo').value = '';
+    $('vd-url').value = '';
     this.renderVideos(); this.renderProfile();
   },
 
   /* ---------- EQUIPO ---------- */
   renderTeam() {
-    const q = (document.getElementById('team-q').value || '').toLowerCase();
-    const tf = document.getElementById('team-f').value;
+    const q = ($('team-q').value || '').toLowerCase();
+    const tf = $('team-f').value;
     const me = DB.me();
     const list = DB.getAgents().filter(a =>
       (!q || a.name.toLowerCase().includes(q)) && (!tf || a.team === tf));
-    document.getElementById('team-list').innerHTML = list.length ? list.map(a => {
+    $('team-list').innerHTML = list.length ? list.map(a => {
       const following = me.following.includes(a.id);
       const isMe = a.id === 'yo';
       return '<button class="acard" onclick="App.openAgent(\'' + a.id + '\')">' +
@@ -648,22 +1052,20 @@ const App = {
         '<div><div class="n">' + a.followers.length + '</div><div class="l">Seguidores</div></div></div></button>';
     }).join('') : '<div class="empty">Sin resultados para esa búsqueda.</div>';
   },
-
   toggleFollow(id) {
     const me = DB.me();
     if (me.following.includes(id)) DB.unfollow(id); else DB.follow(id);
     this.renderTeam(); this.renderProfile();
-    if (document.getElementById('agentview').style.display !== 'none') this.openAgent(id, true);
+    if ($('agentview').style.display !== 'none' && $('agentview').style.display !== '') this.openAgent(id, true);
   },
-
-  openAgent(id, keep) {
+  openAgent(id) {
     const a = DB.getAgent(id); if (!a) return;
     const me = DB.me();
     const following = me.following.includes(id);
     const posts = DB.data.posts.filter(p => p.by === id).slice(0, 5);
     const vids = DB.data.videos.filter(v => v.by === id);
     const html =
-      '<div style="position:sticky;top:0;background:var(--card);border-bottom:1px solid var(--border);padding:10px 14px;z-index:5;">' +
+      '<div style="position:sticky;top:0;background:#fff;border-bottom:1px solid var(--border-soft);padding:10px 14px;z-index:5;">' +
       '<button class="btn btn-ghost btn-sm" onclick="document.getElementById(\'agentview\').style.display=\'none\'">← Volver</button></div>' +
       '<div class="cover"></div><div class="pwrap">' +
       '<div class="pav" style="background:' + a.color + '">' + (a.company ? '⚔️' : esc(initials(a.name))) + '</div>' +
@@ -679,17 +1081,17 @@ const App = {
       '<h3 style="font-size:15px;margin:14px 0 4px;">Videos</h3>' +
       (vids.length ? '<div class="vgrid" style="padding:4px 0 12px;">' + vids.map(v => this.videoCard(v)).join('') + '</div>' : '<div class="empty">Sin videos.</div>') +
       '<div style="height:30px;"></div></div>';
-    const av = document.getElementById('agentview');
+    const av = $('agentview');
     av.innerHTML = html; av.style.display = 'block'; av.scrollTop = 0;
   },
 
   /* ---------- PERFIL ---------- */
   renderProfile() {
     const me = DB.me();
-    document.getElementById('pf-av').outerHTML = avatarHTML(me, 96).replace('class="av"', 'class="pav" id="pf-av"').replace(/style="[^"]*"/, 'style="background:' + me.color + '"');
-    document.getElementById('pf-name').textContent = me.name;
-    document.getElementById('pf-role').textContent = me.role + ' · ' + me.team;
-    document.getElementById('pf-stats').innerHTML =
+    $('pf-av').outerHTML = avatarHTML(me, 92).replace('class="av"', 'class="pav" id="pf-av"').replace(/style="[^"]*"/, 'style="background:' + me.color + '"');
+    $('pf-name').textContent = me.name;
+    $('pf-role').textContent = me.role + ' · ' + me.team;
+    $('pf-stats').innerHTML =
       '<div><div class="n">' + me.clients + '</div><div class="l">Clientes</div></div>' +
       '<div><div class="n">' + me.salesMonth + '</div><div class="l">Ventas</div></div>' +
       '<div><div class="n">' + fmtMoney(me.alp) + '</div><div class="l">ALP</div></div>' +
@@ -697,16 +1099,14 @@ const App = {
       '<div><div class="n">' + me.following.length + '</div><div class="l">Seguidos</div></div>';
     this.renderPfBody();
   },
-
   pfTab(t, btn) {
     this.pfTabCur = t;
     document.querySelectorAll('#pf-subtabs button').forEach(b => b.classList.remove('on'));
-    btn.classList.add('on');
+    if (btn) btn.classList.add('on');
     this.renderPfBody();
   },
-
   renderPfBody() {
-    const body = document.getElementById('pf-body');
+    const body = $('pf-body');
     if (this.pfTabCur === 'refs') {
       const list = DB.data.referrals.filter(r => r.assignedBy === 'yo').sort((a, b) => b.ts - a.ts);
       body.innerHTML = list.length ? list.map(r => this.refCard(r)).join('').replace(/<div class="ref">/g, '<div class="ref" style="margin:10px 0;">')
@@ -721,7 +1121,6 @@ const App = {
         : '<div class="empty">Tus ventas cerradas aparecerán aquí. 🏆</div>';
     }
   },
-
   editProfile() {
     const me = DB.me();
     const teams = DB.getTeams();
@@ -731,33 +1130,305 @@ const App = {
       teams.map(t => '<option' + (t === me.team ? ' selected' : '') + '>' + esc(t) + '</option>').join('') + '</select>' +
       '<button class="btn btn-blue" onclick="App.saveProfile()">Guardar</button>');
   },
-
   saveProfile() {
-    const name = document.getElementById('ep-name').value.trim();
-    const team = document.getElementById('ep-team').value;
+    const name = $('ep-name').value.trim();
+    const team = $('ep-team').value;
     if (!name) { alert('El nombre no puede estar vacío.'); return; }
     DB.updateMe({ name: name, team: team });
     closeSheet(); this.renderProfile(); this.renderStories();
-  },
-
-  /* ---------- init ---------- */
-  init() {
-    DB.load();
-    // equipo: llenar filtro de equipos
-    document.getElementById('team-f').innerHTML = '<option value="">Todos los equipos</option>' +
-      DB.getTeams().map(t => '<option>' + esc(t) + '</option>').join('');
-    document.querySelectorAll('#composer-types button').forEach(b =>
-      b.addEventListener('click', () => this.setComposerType(b.dataset.t, b)));
-    this.renderStories();
-    this.renderFeed();
-    this.renderRefs();
-    this.renderVideos();
-    this.renderTeam();
-    this.renderProfile();
   }
 };
 
-App.init();
+/* ============================================================
+   Herramientas personales (citas, mapa, seguimiento, ilustrador,
+   línea recta, embudo, reporte) — claves gl_* en localStorage
+   ============================================================ */
+const ETAPAS={nuevo:['Nuevo','b-nuevo'],contacto:['Contactado','b-contacto'],cita:['Cita agendada','b-cita'],present:['Presentación hecha','b-present'],cierre:['En cierre','b-cierre'],ganado:['Ganado 🎉','b-ganado']};
+const ORDEN=['nuevo','contacto','cita','present','cierre','ganado'];
+
+/* ===== CITAS ===== */
+async function geocode(dir){
+  if(!dir)return null;
+  try{
+    const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q='+encodeURIComponent(dir+' Utah'),{headers:{'Accept':'application/json'}});
+    const j=await r.json();
+    if(j&&j.length)return{lat:+j[0].lat,lon:+j[0].lon};
+  }catch(e){}
+  return null;
+}
+async function guardarCita(){
+  const nombre=$('c-nombre').value.trim();
+  if(!nombre){alert('Pon el nombre del cliente');return;}
+  const citas=load('gl_citas',[]);
+  const dir=$('c-dir').value.trim();
+  const c={id:Date.now(),nombre,tel:$('c-tel').value.trim(),fecha:$('c-fecha').value||hoyISO(),
+    hora:$('c-hora').value,tipo:$('c-tipo').value,dir,notas:$('c-notas').value.trim(),lat:null,lon:null};
+  if(dir){const g=await geocode(dir); if(g){c.lat=g.lat;c.lon=g.lon;} else alert('Guardada, pero no encontré la dirección en el mapa. Revísala.');}
+  citas.push(c); save('gl_citas',citas);
+  ['c-nombre','c-tel','c-fecha','c-hora','c-dir','c-notas'].forEach(i=>$(i).value='');
+  renderCitas(); renderHoy();
+}
+function renderCitas(){
+  const citas=load('gl_citas',[]).sort((a,b)=>(a.fecha+a.hora).localeCompare(b.fecha+b.hora));
+  const box=$('lista-citas');
+  if(!citas.length){box.innerHTML='<p class="small">Sin citas agendadas.</p>';return;}
+  box.innerHTML=citas.map(c=>`
+    <div class="item">
+      <div class="t">${esc(c.nombre)} <span class="badge b-cita">${esc(c.tipo)}</span></div>
+      <div class="s">📅 ${fmtFecha(c.fecha)} ${esc(c.hora||'')} ${c.tel?'· 📞 '+esc(c.tel):''}<br>${c.dir?'📍 '+esc(c.dir):'<i class="small">sin dirección</i>'}${c.notas?'<br>📝 '+esc(c.notas):''}</div>
+      <div class="acts">
+        ${c.lat?`<button onclick="verEnMapa(${c.id})">Ver en mapa</button>`:''}
+        ${c.tel?`<button onclick="location.href='tel:${esc(c.tel)}'">Llamar</button><button onclick="window.open('https://wa.me/1${esc(c.tel.replace(/\D/g,''))}')">WhatsApp</button>`:''}
+        <button onclick="borrarCita(${c.id})">Borrar</button>
+      </div>
+    </div>`).join('');
+}
+function borrarCita(id){if(!confirm('¿Borrar esta cita?'))return;save('gl_citas',load('gl_citas',[]).filter(c=>c.id!==id));renderCitas();renderHoy();}
+function verEnMapa(id){
+  const c=load('gl_citas',[]).find(x=>x.id===id); if(!c||!c.lat)return;
+  App.hgo('h-mapa');
+  setTimeout(()=>{if(map){map.setView([c.lat,c.lon],14);}},400);
+}
+
+/* ===== SEGUIMIENTO ===== */
+function guardarSeg(){
+  const nombre=$('s-nombre').value.trim();
+  if(!nombre){alert('Pon el nombre');return;}
+  const s=load('gl_seg',[]);
+  s.push({id:Date.now(),nombre,tel:$('s-tel').value.trim(),etapa:$('s-etapa').value,fecha:$('s-fecha').value||hoyISO(),nota:$('s-nota').value.trim()});
+  save('gl_seg',s);
+  ['s-nombre','s-tel','s-fecha','s-nota'].forEach(i=>$(i).value='');
+  renderSeg(); renderHoy();
+}
+function renderSeg(){
+  const s=load('gl_seg',[]).slice().sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  const box=$('lista-seg');
+  if(!s.length){box.innerHTML='<p class="small">Pipeline vacío.</p>';return;}
+  box.innerHTML=s.map(p=>{const[l,cl]=ETAPAS[p.etapa]||ETAPAS.nuevo;const ven=p.fecha<hoyISO()&&p.etapa!=='ganado';
+    return `<div class="item" style="border-left-color:${ven?'#ed4956':'#d4a017'}">
+      <div class="t">${esc(p.nombre)} <span class="badge ${cl}">${l}</span>${ven?' <span class="badge" style="background:#fdeef0;color:#ed4956;">ATRASADO</span>':''}</div>
+      <div class="s">🔔 ${fmtFecha(p.fecha)}${p.tel?' · 📞 '+esc(p.tel):''}${p.nota?'<br>📝 '+esc(p.nota):''}</div>
+      <div class="acts">
+        <button onclick="avanzarSeg(${p.id})">Avanzar ➡️</button>
+        ${p.tel?`<button onclick="window.open('https://wa.me/1${esc(p.tel.replace(/\D/g,''))}')">WhatsApp</button>`:''}
+        <button onclick="borrarSeg(${p.id})">Borrar</button>
+      </div>
+    </div>`;}).join('');
+}
+function avanzarSeg(id){
+  const s=load('gl_seg',[]); const p=s.find(x=>x.id===id); if(!p)return;
+  const i=ORDEN.indexOf(p.etapa); if(i<ORDEN.length-1)p.etapa=ORDEN[i+1];
+  save('gl_seg',s); renderSeg(); renderHoy();
+}
+function borrarSeg(id){if(!confirm('¿Borrar?'))return;save('gl_seg',load('gl_seg',[]).filter(x=>x.id!==id));renderSeg();renderHoy();}
+
+/* ===== MAPA ===== */
+let map=null, capa=null;
+const HOME=[40.2969,-111.6946]; // Orem, UT
+function initMap(){
+  if(typeof L==='undefined'){ $('map').innerHTML='<p class="small">Mapa no disponible sin conexión.</p>'; return; }
+  if(map){setTimeout(()=>map.invalidateSize(),120);return;}
+  map=L.map('map').setView(HOME,11);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+  L.marker(HOME).addTo(map).bindPopup('<b>🏠 Base (Orem)</b>');
+}
+function citasFiltradas(){
+  const f=$('m-filtro').value, h=hoyISO();
+  let c=load('gl_citas',[]).filter(x=>x.lat);
+  if(f==='hoy')c=c.filter(x=>x.fecha===h);
+  if(f==='semana'){const d=new Date();const ini=new Date(d);ini.setDate(d.getDate()-d.getDay());
+    const fin=new Date(ini);fin.setDate(ini.getDate()+6);
+    c=c.filter(x=>x.fecha>=ini.toISOString().slice(0,10)&&x.fecha<=fin.toISOString().slice(0,10));}
+  return c.sort((a,b)=>(a.fecha+a.hora).localeCompare(b.fecha+b.hora));
+}
+function dibujarMapa(){
+  if(!map||typeof L==='undefined')return;
+  if(capa)map.removeLayer(capa); capa=L.layerGroup().addTo(map);
+  const c=citasFiltradas();
+  c.forEach(x=>{
+    L.marker([x.lat,x.lon]).addTo(capa).bindPopup(
+      `<b>${esc(x.nombre)}</b><br>📅 ${fmtFecha(x.fecha)} ${esc(x.hora||'')}<br>📍 ${esc(x.dir||'')}<br><a href="https://www.google.com/maps/dir/?api=1&destination=${x.lat},${x.lon}" target="_blank">Cómo llegar 🚗</a>`);
+  });
+  if(c.length){map.fitBounds(L.latLngBounds(c.map(x=>[x.lat,x.lon]).concat([HOME])),{padding:[30,30]});}
+  $('ruta-info').innerHTML='';
+}
+const hav=(a,b)=>{const R=6371,t=Math.PI/180;
+  const dLa=(b[0]-a[0])*t,dLo=(b[1]-a[1])*t;
+  const h=Math.sin(dLa/2)**2+Math.cos(a[0]*t)*Math.cos(b[0]*t)*Math.sin(dLo/2)**2;
+  return 2*R*Math.asin(Math.sqrt(h));};
+async function tramoKm(a,b){
+  try{
+    const u=`https://router.project-osrm.org/route/v1/driving/${a[1]},${a[0]};${b[1]},${b[0]}?overview=false`;
+    const r=await fetch(u); const j=await r.json();
+    if(j.routes&&j.routes.length)return{km:j.routes[0].distance/1000,min:j.routes[0].duration/60,real:true};
+  }catch(e){}
+  const km=hav(a,b)*1.35;
+  return{km,min:km/45*60,real:false};
+}
+async function optimizarRuta(){
+  const c=citasFiltradas();
+  if(c.length<1){alert('No hay citas con ubicación en este filtro');return;}
+  $('ruta-info').innerHTML='<p class="small">Calculando ruta...</p>';
+  if(capa)map.removeLayer(capa); capa=L.layerGroup().addTo(map);
+  let pts=[HOME].concat(c.map(x=>[x.lat,x.lon]));
+  let totKm=0,totMin=0,real=true,lineas=[];
+  for(let i=0;i<pts.length-1;i++){
+    const t=await tramoKm(pts[i],pts[i+1]);
+    totKm+=t.km; totMin+=t.min; if(!t.real)real=false;
+    lineas.push(`<div class="fila"><span>${i===0?'🏠 Base → '+esc(c[0].nombre):esc(c[i-1].nombre)+' → '+esc(c[i].nombre)}</span><b>${t.km.toFixed(1)} km · ~${Math.round(t.min)} min</b></div>`);
+  }
+  L.polyline(pts,{color:'#d4a017',weight:4}).addTo(capa);
+  pts.forEach((p,i)=>{ if(i===0)return;
+    L.marker(p).addTo(capa).bindPopup(`<b>${i}. ${esc(c[i-1].nombre)}</b><br>📅 ${fmtFecha(c[i-1].fecha)} ${esc(c[i-1].hora||'')}`);});
+  map.fitBounds(L.latLngBounds(pts),{padding:[30,30]});
+  $('ruta-info').innerHTML=`<div class="card" style="margin:0"><h3>🚗 Ruta optimizada (${c.length} citas)</h3>${lineas.join('')}
+    <div class="stack-row total"><span>Total aproximado</span><span>${totKm.toFixed(1)} km · ~${Math.round(totMin)} min</span></div>
+    ${real?'':'<p class="small">*Estimado en línea recta ajustada (sin conexión al servicio de rutas).</p>'}</div>`;
+}
+
+/* ===== ILUSTRADOR ===== */
+function calcIlus(){
+  const vals=[['Hospitalización familiar',$('i-hosp').value],['Gastos finales',$('i-final').value],
+    ['Protector de ingresos',$('i-ing').value],['Muerte accidental (padres)',$('i-acc').value],['Cobertura niños',$('i-ninos').value]];
+  const total=vals.reduce((a,v)=>a+Number(v[1]||0),0);
+  const mensual=92.83, personas=4;
+  $('ilus-out').innerHTML=vals.map(v=>`<div class="stack-row"><span>${v[0]}</span><b>${money(v[1])}</b></div>`).join('')+
+    `<div class="stack-row total"><span>Protección total</span><span>${money(total)}</span></div>
+     <div class="reveal"><div class="small">TODO ESTO POR SOLO</div><div class="big">$${mensual}/mes</div>
+     <div class="fila" style="justify-content:center;gap:18px;margin-top:8px;"><span>$${(mensual/personas).toFixed(2)} por persona</span><span>$${(mensual/personas/4).toFixed(2)}/semana por persona</span></div></div>`;
+}
+
+/* ===== EMBUDO ===== */
+function guardarEmbudo(){
+  const e={ag:+$('e-ag').value||0,re:+$('e-re').value||0,ve:+$('e-ve').value||0,rf:+$('e-rf').value||0,semana:hoyISO()};
+  save('gl_embudo',e); renderEmbudo(); renderHoy();
+}
+function embudoHTML(e){
+  const barra=(v,m)=>`<div class="bar"><div style="width:${Math.min(100,m>0?v/m*100:0)}%"></div></div><div class="fila"><span>${v} / meta ${m}</span><b>${m>0?Math.round(v/m*100):0}%</b></div>`;
+  const conv=(a,b)=>b>0?Math.round(a/b*100)+'%':'—';
+  return `<h3>Agendadas</h3>${barra(e.ag,20)}<h3>Realizadas</h3>${barra(e.re,15)}
+    <h3>Ventas</h3>${barra(e.ve,5)}<h3>Referidos nuevos</h3>${barra(e.rf,20)}
+    <div class="fila"><span>Conversión cita→venta</span><b>${conv(e.ve,e.re)}</b></div>
+    <div class="fila"><span>Referidos por venta</span><b>${e.ve>0?(e.rf/e.ve).toFixed(1):'—'}</b></div>`;
+}
+function renderEmbudo(){const e=load('gl_embudo',{ag:0,re:0,ve:0,rf:0});
+  $('e-ag').value=e.ag;$('e-re').value=e.re;$('e-ve').value=e.ve;$('e-rf').value=e.rf;
+  $('embudo-out').innerHTML=embudoHTML(e);}
+
+/* ===== REPORTE ===== */
+const ROSTER=["Andres Lopez","Bleidy Mendez","Claudia Florez","Cristian Correa","Deadier Velasquez","Deisy Aguirre","Domenico Novara","Edinson Romero","Estefani Bustillo","Freddy Mota","Genesis Fuenmayor","German Manrique","Grecia Ferrer","Henry Cortes","Ivana Ferrer","Jackson Ovalles","Johanna Manrique","Jorge Moreno","Jose Pacheco","Julieth Quinonez","Julimar Colona","Laura Arellano","Laura Thorne","Maria Quintana","Marlon Barahona","Moises Nunez","Ossman Castro","Paula Rodriguez","Rachael Reyes","Raul Silva","Sebastian Davila","Shirley Florez","Valentina Jaimes","Wilmer Ramirez","Yamilet Alvarez","Yare Rodriguez","Yeni Lozano"];
+function listaAgentes(){const c=load('gl_agentes_custom',[]);return[...new Set([...ROSTER,...c])].sort((a,b)=>a.localeCompare(b,'es'));}
+function agenteActual(){const a=load('gl_agente_actual','Jose Pacheco');return listaAgentes().includes(a)?a:'Jose Pacheco';}
+function poblarAgentes(){
+  const lista=listaAgentes(),act=agenteActual();
+  const opts=lista.map(n=>`<option ${n===act?'selected':''}>${esc(n)}</option>`).join('');
+  $('rp-agente').innerHTML=opts; $('rp-ver').innerHTML=opts;
+}
+function nuevoAgente(){
+  const n=prompt('Nombre del nuevo agente:');
+  if(!n||!n.trim())return;
+  const nom=n.trim(),c=load('gl_agentes_custom',[]);
+  if(!ROSTER.includes(nom)&&!c.includes(nom)){c.push(nom);save('gl_agentes_custom',c);}
+  save('gl_agente_actual',nom); poblarAgentes(); renderReportes(); renderHoy();
+}
+const agDe=r=>(r.agente||'Jose Pacheco');
+function guardarReporte(){
+  const fecha=$('rp-fecha').value||hoyISO();
+  const ag=$('rp-agente').value||'Jose Pacheco';
+  save('gl_agente_actual',ag);
+  const r={id:Date.now(),fecha,agente:ag,ag:+$('rp-ag').value||0,re:+$('rp-re').value||0,pr:+$('rp-pr').value||0,
+    ve:+$('rp-ve').value||0,alp:+$('rp-alp').value||0,rf:+$('rp-rf').value||0};
+  let reps=load('gl_reps',[]).filter(x=>!(x.fecha===fecha&&agDe(x)===ag));
+  reps.push(r); save('gl_reps',reps);
+  ['rp-ag','rp-re','rp-pr','rp-ve','rp-alp','rp-rf'].forEach(i=>$(i).value=0);
+  $('rp-fecha').value=hoyISO();
+  renderReportes(); renderHoy();
+}
+function semanaRango(){
+  const d=new Date(),ini=new Date(d); ini.setDate(d.getDate()-d.getDay());
+  const fin=new Date(ini); fin.setDate(ini.getDate()+6);
+  return [ini.toISOString().slice(0,10),fin.toISOString().slice(0,10)];
+}
+function renderReportes(){
+  const ver=($('rp-ver')&&$('rp-ver').value)||agenteActual();
+  const[ini,fin]=semanaRango();
+  const reps=load('gl_reps',[]).filter(x=>x.fecha>=ini&&x.fecha<=fin&&agDe(x)===ver);
+  const t=k=>reps.reduce((a,x)=>a+(+x[k]||0),0);
+  const T={ag:t('ag'),re:t('re'),pr:t('pr'),ve:t('ve'),alp:t('alp'),rf:t('rf')};
+  const conv=(a,b)=>b>0?Math.round(a/b*100)+'%':'—';
+  $('rep-semana').innerHTML=`
+    <div class="kpis" style="margin:0 0 6px;">
+      <div class="kpi"><div class="n">${T.ag}</div><div class="l">Citas agend.</div></div>
+      <div class="kpi"><div class="n">${T.re}</div><div class="l">Realizadas</div></div>
+      <div class="kpi"><div class="n">${T.pr}</div><div class="l">Presentac.</div></div>
+      <div class="kpi"><div class="n">${T.ve}</div><div class="l">Ventas</div></div>
+    </div>
+    <div class="fila"><span>💰 ALP semanal</span><b>$${T.alp.toLocaleString('en-US')}</b></div>
+    <div class="fila"><span>🤝 Referidos</span><b>${T.rf}</b></div>
+    <div class="fila"><span>Efectividad cita → presentación</span><b>${conv(T.pr,T.re)}</b></div>
+    <div class="fila"><span>Cierre presentación → venta</span><b>${conv(T.ve,T.pr)}</b></div>`;
+  const ult=load('gl_reps',[]).filter(x=>agDe(x)===ver).slice().sort((a,b)=>b.fecha.localeCompare(a.fecha)).slice(0,10);
+  $('lista-rep').innerHTML=ult.length?ult.map(r=>`
+    <div class="item"><div class="t">📅 ${fmtFecha(r.fecha)} <span class="badge b-cita">${esc(agDe(r))}</span></div>
+      <div class="s">Ag:${r.ag} · Re:${r.re} · Pres:${r.pr} · Ventas:${r.ve} · ALP:$${(+r.alp).toLocaleString('en-US')} · Ref:${r.rf}</div>
+      <div class="acts"><button onclick="borrarRep(${r.id})">Borrar</button></div></div>`).join('')
+    :'<p class="small">Sin reportes aún.</p>';
+}
+function borrarRep(id){if(!confirm('¿Borrar reporte?'))return;
+  save('gl_reps',load('gl_reps',[]).filter(x=>x.id!==id));renderReportes();renderHoy();}
+function waReporte(){
+  const ver=($('rp-ver')&&$('rp-ver').value)||agenteActual();
+  const[ini,fin]=semanaRango();
+  const reps=load('gl_reps',[]).filter(x=>x.fecha>=ini&&x.fecha<=fin&&agDe(x)===ver);
+  if(!reps.length){alert('No hay reportes esta semana para '+ver);return;}
+  const t=k=>reps.reduce((a,x)=>a+(+x[k]||0),0);
+  const T={ag:t('ag'),re:t('re'),pr:t('pr'),ve:t('ve'),alp:t('alp'),rf:t('rf')};
+  const txt='⚔️ *REPORTE SEMANAL — '+encodeURIComponent(ver).replace(/%20/g,' ')+'*%0A📅 '+fmtFecha(ini)+' al '+fmtFecha(fin)+'%0A%0A'+
+    '📌 Citas agendadas: '+T.ag+'%0A✅ Citas realizadas: '+T.re+'%0A🎤 Presentaciones: '+T.pr+'%0A'+
+    '💰 Ventas: '+T.ve+'%0A💵 ALP: $'+T.alp.toLocaleString('en-US')+'%0A🤝 Referidos: '+T.rf;
+  window.open('https://wa.me/?text='+txt,'_blank');
+}
+
+/* ===== DRILL ===== */
+const DRILL=['1 presentación grabada en video','Repetir el guion palabra por palabra','Practicar las 10 tonalidades','Hacer loops de objeciones en voz alta','Repasar los tres dieces','Practicar el cierre de tres tonos'];
+function renderDrill(){
+  const d=load('gl_drill',{}),h=hoyISO();
+  $('drill').innerHTML=DRILL.map((t,i)=>`<label class="check"><input type="checkbox" ${d[h+i]?'checked':''} onchange="toggleDrill(${i})"> ${t}</label>`).join('');
+}
+function toggleDrill(i){const d=load('gl_drill',{}),h=hoyISO();d[h+i]=!d[h+i];save('gl_drill',d);}
+
+/* ===== HOY (tab Inicio) ===== */
+function renderHoy(){
+  const h=hoyISO();
+  const citas=load('gl_citas',[]).filter(c=>c.fecha===h).sort((a,b)=>(a.hora||'').localeCompare(b.hora||''));
+  $('k-citas').textContent=citas.length;
+  $('hoy-citas').innerHTML=citas.length?citas.map(c=>`<div class="item"><div class="t">${c.hora||''} · ${esc(c.nombre)}</div><div class="s">${esc(c.tipo)}${c.dir?' · 📍 '+esc(c.dir):''}</div></div>`).join(''):'<p class="small">No hay citas para hoy.</p>';
+  const seg=load('gl_seg',[]).filter(p=>p.fecha<=h&&p.etapa!=='ganado');
+  $('k-seg').textContent=seg.length;
+  $('hoy-seg').innerHTML=seg.length?seg.slice(0,5).map(p=>{const[l,cl]=ETAPAS[p.etapa];return `<div class="item"><div class="t">${esc(p.nombre)} <span class="badge ${cl}">${l}</span></div><div class="s">🔔 ${fmtFecha(p.fecha)}${p.nota?' · '+esc(p.nota):''}</div></div>`;}).join(''):'<p class="small">Nada pendiente. ¡Buen trabajo, gladiador!</p>';
+  const mes=h.slice(0,7);
+  const refsV1=load('gl_refs',[]).filter(r=>(r.fecha||'').slice(0,7)===mes).length;
+  const refsSocial=(DB.data?DB.data.referrals:[]).filter(r=>r.assignedBy==='yo'&&new Date(r.ts).toISOString().slice(0,7)===mes).length;
+  $('k-ref').textContent=refsV1+refsSocial;
+  const e=load('gl_embudo',{ag:0,re:0,ve:0,rf:0});
+  $('k-emb').textContent=Math.min(100,Math.round(e.ag/20*100))+'%';
+  $('hoy-embudo').innerHTML=embudoHTML(e);
+  const repHoy=load('gl_reps',[]).find(x=>x.fecha===h&&agDe(x)===agenteActual());
+  $('hoy-rep').innerHTML=repHoy
+    ?`<div class="fila"><span>${esc(agenteActual())}</span><b>✅ Guardado</b></div><div class="s">Ag:${repHoy.ag} · Re:${repHoy.re} · Pres:${repHoy.pr} · Ventas:${repHoy.ve} · ALP:$${(+repHoy.alp).toLocaleString('en-US')} · Ref:${repHoy.rf}</div>`
+    :'<p class="small">⏳ Pendiente — llénalo al terminar el día.</p>';
+}
+
+/* ===== INIT ===== */
+DB.load();
+$('rp-fecha').value=hoyISO();
+poblarAgentes();
+document.getElementById('team-f').innerHTML='<option value="">Todos los equipos</option>'+
+  DB.getTeams().map(t=>'<option>'+esc(t)+'</option>').join('');
+document.querySelectorAll('#composer-types button').forEach(b=>
+  b.addEventListener('click',()=>App.setComposerType(b.dataset.t,b)));
+renderCitas();renderSeg();renderEmbudo();renderDrill();renderReportes();renderHoy();
+App.renderStories();App.renderFeed();App.renderRefs();App.renderVideos();App.renderTeam();App.renderProfile();
 </script>
 </body>
 </html>

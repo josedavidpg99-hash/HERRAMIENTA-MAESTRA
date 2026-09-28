@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gladiadores · App de la Empresa</title>
+<style>
+:root{
+  --bg:#f0f2f5; --card:#ffffff; --txt:#1c1e21; --mut:#65676b;
+  --blue:#1877f2; --blue-d:#166fe5; --gold:#b8860b; --gold2:#f5b301;
+  --border:#e4e6eb; --green:#31a24c; --red:#e0245e; --chip:#eef1f4;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg); color:var(--txt); padding-bottom:74px;}
+/* ---------- header ---------- */
+header.top{position:sticky; top:0; z-index:50; background:var(--card);
+  border-bottom:1px solid var(--border); padding:10px 16px; display:flex; align-items:center; gap:10px;}
+header.top .logo{font-size:26px;}
+header.top h1{margin:0; font-size:18px; font-weight:800;}
+header.top h1 .g{color:var(--gold);}
+header.top p{margin:0; font-size:11px; color:var(--mut);}
+/* ---------- tabs ---------- */
+.tab{display:none; max-width:640px; margin:0 auto;}
+.tab.act{display:block;}
+/* ---------- cards / generic ---------- */
+.card{background:var(--card); border-radius:12px; margin:10px 12px; padding:14px;
+  box-shadow:0 1px 2px rgba(0,0,0,.08);}
+.card h2{margin:0 0 10px; font-size:16px;}
+.small{font-size:12px; color:var(--mut);}
+.mt{margin-top:10px;}
+.row{display:flex; align-items:center; gap:10px;}
+.grow{flex:1;}
+label.fl{display:block; font-size:12px; color:var(--mut); margin:10px 0 4px; font-weight:600;}
+input.fi,select.fi,textarea.fi{width:100%; padding:11px 12px; border-radius:10px;
+  border:1px solid var(--border); background:#f5f6f7; color:var(--txt); font-size:15px; font-family:inherit;}
+textarea.fi{min-height:70px; resize:vertical;}
+.btn{display:block; width:100%; padding:12px; margin-top:12px; border:none; border-radius:10px;
+  font-size:15px; font-weight:700; cursor:pointer; font-family:inherit;}
+.btn-blue{background:var(--blue); color:#fff;}
+.btn-blue:active{background:var(--blue-d);}
+.btn-ghost{background:var(--chip); color:var(--txt);}
+.btn-green{background:var(--green); color:#fff;}
+.btn-red{background:#fde8ea; color:var(--red); border:1px solid #f5c2cb;}
+.btn-sm{width:auto; display:inline-block; padding:8px 14px; margin:0; font-size:13px;}
+/* ---------- bottom nav ---------- */
+nav.bottom{position:fixed; bottom:0; left:0; right:0; z-index:60; background:var(--card);
+  border-top:1px solid var(--border); display:flex; padding:6px 4px calc(8px + env(safe-area-inset-bottom));}
+nav.bottom button{flex:1; background:none; border:none; color:var(--mut); font-size:10px; font-weight:600;
+  display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:4px 0; font-family:inherit;}
+nav.bottom button svg{width:25px; height:25px;}
+nav.bottom button.act{color:var(--blue);}
+/* ---------- stories ---------- */
+.stories{display:flex; gap:12px; overflow-x:auto; padding:12px 14px 6px; background:var(--card);
+  border-bottom:1px solid var(--border); margin-bottom:2px;}
+.story{flex:0 0 auto; width:64px; text-align:center; cursor:pointer; background:none; border:none; font-family:inherit; padding:0;}
+.story .ring{width:60px; height:60px; border-radius:50%; padding:3px;
+  background:conic-gradient(from 180deg, var(--gold2), var(--gold), #ffe08a, var(--gold2));}
+.story .av{width:100%; height:100%; border-radius:50%; background:#fff; display:flex; align-items:center;
+  justify-content:center; font-weight:800; font-size:20px; color:#fff; border:3px solid #fff;}
+.story span.nm{display:block; font-size:10px; color:var(--mut); margin-top:4px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+/* ---------- composer ---------- */
+.composer{background:var(--card); border-radius:12px; margin:10px 12px; padding:12px 14px;
+  box-shadow:0 1px 2px rgba(0,0,0,.08);}
+.composer textarea{border:none; background:#f5f6f7; border-radius:18px; padding:10px 14px;}
+.typechips{display:flex; gap:8px; margin:10px 0 2px; flex-wrap:wrap;}
+.typechips button{border:1px solid var(--border); background:#fff; border-radius:18px; padding:7px 12px;
+  font-size:13px; cursor:pointer; font-family:inherit; color:var(--txt);}
+.typechips button.on{background:#e7f0fe; border-color:var(--blue); color:var(--blue); font-weight:700;}
+/* ---------- feed posts ---------- */
+.post{background:var(--card); border-radius:12px; margin:10px 12px; padding:12px 14px;
+  box-shadow:0 1px 2px rgba(0,0,0,.08);}
+.post .ph{display:flex; align-items:center; gap:10px;}
+.av{width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-weight:800; color:#fff; font-size:17px; flex:0 0 auto;}
+.post .pn{font-weight:700; font-size:14px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;}
+.post .pt{font-size:12px; color:var(--mut);}
+.badge-empresa{background:linear-gradient(135deg,var(--gold2),var(--gold)); color:#3d2f00; font-size:10px;
+  font-weight:800; padding:3px 8px; border-radius:10px; letter-spacing:.5px;}
+.post .ptext{font-size:15px; margin:10px 0 6px; line-height:1.45; white-space:pre-wrap;}
+.post .actions{display:flex; gap:4px; border-top:1px solid var(--border); margin-top:8px; padding-top:6px;}
+.post .actions button{flex:1; background:none; border:none; color:var(--mut); font-size:13px; font-weight:600;
+  padding:8px; border-radius:8px; cursor:pointer; font-family:inherit; display:flex; align-items:center;
+  justify-content:center; gap:6px;}
+.post .actions button:active{background:var(--chip);}
+.post .actions button.liked{color:var(--red);}
+.comments{border-top:1px solid var(--border); margin-top:6px; padding-top:8px;}
+.comment{display:flex; gap:8px; margin:8px 0; font-size:13px;}
+.comment .cb{background:#f5f6f7; border-radius:12px; padding:8px 12px; flex:1;}
+.comment .cb b{font-size:12px;}
+.comment .cb p{margin:2px 0 0;}
+.cform{display:flex; gap:8px; margin-top:8px;}
+.cform input{flex:1; border:1px solid var(--border); border-radius:18px; padding:9px 14px; font-size:14px; font-family:inherit;}
+.cform button{border:none; background:var(--blue); color:#fff; border-radius:18px; padding:0 16px;
+  font-weight:700; cursor:pointer; font-family:inherit;}
+/* ---------- segments / chips ---------- */
+.seg{display:flex; background:var(--card); margin:10px 12px 0; border-radius:12px; padding:4px;
+  box-shadow:0 1px 2px rgba(0,0,0,.08);}
+.seg button{flex:1; border:none; background:none; padding:10px; border-radius:9px; font-size:14px;
+  font-weight:600; color:var(--mut); cursor:pointer; font-family:inherit;}
+.seg button.on{background:#e7f0fe; color:var(--blue); font-weight:800;}
+.fchips{display:flex; gap:8px; overflow-x:auto; padding:10px 12px 2px;}
+.fchips button{flex:0 0 auto; border:1px solid var(--border); background:var(--card); border-radius:18px;
+  padding:8px 14px; font-size:13px; cursor:pointer; font-family:inherit; color:var(--txt);}
+.fchips button.on{background:var(--txt); color:#fff; border-color:var(--txt); font-weight:700;}
+/* ---------- referrals ---------- */
+.ref{background:var(--card); border-radius:12px; margin:10px 12px; padding:14px;
+  box-shadow:0 1px 2px rgba(0,0,0,.08);}
+.ref .rn{font-weight:700; font-size:15px;}
+.ref .rd{font-size:13px; color:var(--mut); margin-top:3px;}
+.chip{display:inline-block; font-size:11px; font-weight:700; padding:4px 10px; border-radius:12px; margin-top:8px;}
+.st-nuevo{background:#e7f0fe; color:var(--blue);}
+.st-aceptado{background:#e6f7ec; color:#1c7c3c;}
+.st-contactado{background:#fff4d6; color:#8a6d00;}
+.st-cerrado{background:#e9e2f7; color:#5b2d91;}
+.ref .rbtns{display:flex; gap:8px; margin-top:10px;}
+.ref .rbtns .btn{margin-top:0;}
+.asig{font-size:11px; color:var(--gold); font-weight:700; margin-top:8px;}
+/* ---------- videos ---------- */
+.vgrid{display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:4px 12px 12px;}
+.vcard{background:var(--card); border-radius:12px; overflow:hidden; box-shadow:0 1px 2px rgba(0,0,0,.08);
+  cursor:pointer; border:none; padding:0; text-align:left; font-family:inherit; color:var(--txt);}
+.vthumb{position:relative; aspect-ratio:16/9; display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(135deg,#2b3a55,#101820);}
+.vthumb.nolink{background:linear-gradient(135deg,#8a6d00,#3d2f00);}
+.vthumb .play{width:46px; height:46px; border-radius:50%; background:rgba(255,255,255,.92);
+  display:flex; align-items:center; justify-content:center; font-size:18px; color:#1c1e21;}
+.vthumb .pend{position:absolute; bottom:6px; left:6px; right:6px; font-size:10px; color:#fff;
+  background:rgba(0,0,0,.55); border-radius:8px; padding:4px 8px; text-align:center;}
+.vmeta{padding:10px 12px;}
+.vmeta .vt{font-weight:700; font-size:13px; line-height:1.3;}
+.vmeta .vc{font-size:11px; color:var(--mut); margin-top:4px;}
+.vcat{font-size:10px; font-weight:800; padding:3px 8px; border-radius:10px; background:#e7f0fe; color:var(--blue);}
+/* ---------- team ---------- */
+.acard{background:var(--card); border-radius:12px; margin:10px 12px; padding:14px;
+  box-shadow:0 1px 2px rgba(0,0,0,.08); cursor:pointer; border:none; width:calc(100% - 24px);
+  text-align:left; font-family:inherit; color:var(--txt); display:block;}
+.acard .stats{display:flex; margin-top:10px; border-top:1px solid var(--border); padding-top:10px;}
+.acard .stats div{flex:1; text-align:center;}
+.acard .stats .n{font-weight:800; font-size:15px;}
+.acard .stats .l{font-size:10px; color:var(--mut);}
+/* ---------- profile ---------- */
+.cover{height:120px; background:linear-gradient(135deg,#3d2f00,var(--gold2) 60%,#ffe08a); border-radius:0 0 16px 16px;}
+.pwrap{max-width:640px; margin:0 auto; padding:0 16px;}
+.pav{width:96px; height:96px; border-radius:50%; border:4px solid #fff; margin-top:-48px;
+  display:flex; align-items:center; justify-content:center; font-size:34px; font-weight:800; color:#fff;
+  box-shadow:0 2px 6px rgba(0,0,0,.2);}
+.pname{font-size:20px; font-weight:800; margin:8px 0 0;}
+.prole{font-size:13px; color:var(--mut);}
+.pstats{display:flex; background:var(--card); border-radius:12px; margin:12px 0; padding:12px 4px;
+  box-shadow:0 1px 2px rgba(0,0,0,.08);}
+.pstats div{flex:1; text-align:center;}
+.pstats .n{font-weight:800; font-size:17px;}
+.pstats .l{font-size:11px; color:var(--mut);}
+.subtabs{display:flex; gap:8px; margin:4px 0 2px;}
+.subtabs button{flex:1; border:1px solid var(--border); background:var(--card); border-radius:10px;
+  padding:10px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; color:var(--txt);}
+.subtabs button.on{background:var(--txt); color:#fff; border-color:var(--txt);}
+.note{background:#fff8e1; border:1px solid #f0d878; border-radius:12px; margin:12px; padding:12px 14px;
+  font-size:12px; color:#6b5a00; line-height:1.5;}
+/* ---------- modal ---------- */
+#modal{position:fixed; inset:0; z-index:100; display:none; align-items:flex-end; justify-content:center;
+  background:rgba(0,0,0,.5);}
+#modal.open{display:flex;}
+.sheet{background:#fff; width:100%; max-width:640px; max-height:88vh; overflow-y:auto;
+  border-radius:18px 18px 0 0; padding:18px 16px calc(20px + env(safe-area-inset-bottom)); animation:up .22s ease;}
+@keyframes up{from{transform:translateY(40px); opacity:.6;} to{transform:none; opacity:1;}}
+.sheet h2{margin:0 0 8px; font-size:17px;}
+.sheet .x{float:right; border:none; background:var(--chip); width:32px; height:32px; border-radius:50%;
+  font-size:16px; cursor:pointer;}
+.vframe{position:relative; width:100%; aspect-ratio:16/9; background:#000; border-radius:12px; overflow:hidden;}
+.vframe iframe{position:absolute; inset:0; width:100%; height:100%; border:0;}
+.empty{text-align:center; color:var(--mut); padding:26px 12px; font-size:14px;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="logo">⚔️</div>
+  <div><h1>Gladiadores <span class="g">· Empresa</span></h1><p>Red del equipo · Agencia de seguros</p></div>
+</header>
+
+<!-- ================= INICIO ================= -->
+<section class="tab act" id="tab-inicio">
+  <div class="stories" id="stories"></div>
+  <div class="composer">
+    <div class="row">
+      <div class="av" id="composer-av"></div>
+      <textarea class="fi grow" id="composer-text" placeholder="Comparte un logro con el equipo..."></textarea>
+    </div>
+    <div class="typechips" id="composer-types">
+      <button data-t="venta" class="on">🎉 Venta cerrada</button>
+      <button data-t="tip">💡 Tip educativo</button>
+      <button data-t="texto">📣 Publicación</button>
+    </div>
+    <button class="btn btn-blue" onclick="App.publish()">Publicar</button>
+  </div>
+  <div id="feed"></div>
+</section>
+
+<!-- ================= REFERIDOS ================= -->
+<section class="tab" id="tab-referidos">
+  <div class="seg" id="ref-seg">
+    <button data-s="asignados" class="on" onclick="App.refSeg('asignados',this)">📥 Asignados por la empresa</button>
+    <button data-s="mios" onclick="App.refSeg('mios',this)">📤 Mis referidos</button>
+  </div>
+  <div class="note" style="margin:10px 12px 0;">💡 <b>Modo local:</b> por ahora los referidos viven en este dispositivo. Para que la empresa asigne referidos de verdad a todo el equipo se necesita una base de datos compartida.</div>
+  <div id="ref-list"></div>
+  <div class="card">
+    <h2>➕ Subir referido</h2>
+    <label class="fl">Nombre del referido</label><input class="fi" id="rf-nombre" placeholder="Nombre completo">
+    <div class="row"><div class="grow"><label class="fl">Teléfono</label><input class="fi" id="rf-tel" inputmode="tel" placeholder="385..."></div>
+    <div class="grow"><label class="fl">¿Quién lo refiere?</label><input class="fi" id="rf-origen" placeholder="Nombre"></div></div>
+    <label class="fl">Notas</label><input class="fi" id="rf-notas" placeholder="Parentesco, interés...">
+    <button class="btn btn-blue" onclick="App.addReferral()">Guardar referido</button>
+  </div>
+</section>
+
+<!-- ================= VIDEOS ================= -->
+<section class="tab" id="tab-videos">
+  <div class="fchips" id="vid-cats">
+    <button data-c="todos" class="on" onclick="App.vidCat('todos',this)">Todos</button>
+    <button data-c="Educativo" onclick="App.vidCat('Educativo',this)">📚 Educativo</button>
+    <button data-c="Ventas" onclick="App.vidCat('Ventas',this)">💼 Ventas</button>
+    <button data-c="Producto" onclick="App.vidCat('Producto',this)">🛡️ Producto</button>
+  </div>
+  <div class="note" style="margin:8px 12px;">🎬 <b>Por ahora los videos se agregan por enlace</b> (YouTube o Vimeo). Toca una tarjeta sin enlace para pegarlo.</div>
+  <div class="vgrid" id="vgrid"></div>
+  <div class="card">
+    <h2>⬆️ Subir video</h2>
+    <label class="fl">Título</label><input class="fi" id="vd-titulo" placeholder="Ej. Cómo presentar la protección familiar">
+    <label class="fl">Categoría</label>
+    <select class="fi" id="vd-cat"><option>Educativo</option><option>Ventas</option><option>Producto</option></select>
+    <label class="fl">Enlace de YouTube o Vimeo (opcional)</label><input class="fi" id="vd-url" inputmode="url" placeholder="https://...">
+    <button class="btn btn-blue" onclick="App.addVideo()">Agregar video</button>
+  </div>
+</section>
+
+<!-- ================= EQUIPO ================= -->
+<section class="tab" id="tab-equipo">
+  <div class="card">
+    <input class="fi" id="team-q" placeholder="🔍 Buscar agente..." oninput="App.renderTeam()">
+    <label class="fl">Filtrar por equipo</label>
+    <select class="fi" id="team-f" onchange="App.renderTeam()"><option value="">Todos los equipos</option></select>
+  </div>
+  <div id="team-list"></div>
+</section>
+
+<!-- ================= PERFIL ================= -->
+<section class="tab" id="tab-perfil">
+  <div class="cover"></div>
+  <div class="pwrap">
+    <div class="pav" id="pf-av"></div>
+    <div class="row"><div class="grow"><div class="pname" id="pf-name"></div><div class="prole" id="pf-role"></div></div>
+      <button class="btn btn-ghost btn-sm" onclick="App.editProfile()">✏️ Editar</button></div>
+    <div class="pstats" id="pf-stats"></div>
+    <div class="subtabs" id="pf-subtabs">
+      <button data-p="refs" class="on" onclick="App.pfTab('refs',this)">📥 Mis referidos</button>
+      <button data-p="vids" onclick="App.pfTab('vids',this)">🎬 Mis videos</button>
+      <button data-p="logros" onclick="App.pfTab('logros',this)">🏆 Logros</button>
+    </div>
+    <div id="pf-body"></div>
+    <div class="note">💡 <b>Modo local:</b> los datos viven en este dispositivo. Para que la empresa asigne referidos de verdad a todo el equipo se necesita una base de datos compartida.</div>
+  </div>
+</section>
+
+<nav class="bottom" id="bottomnav">
+  <button class="act" data-tab="tab-inicio" onclick="App.go('tab-inicio',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Inicio</button>
+  <button data-tab="tab-referidos" onclick="App.go('tab-referidos',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>Referidos</button>
+  <button data-tab="tab-videos" onclick="App.go('tab-videos',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z" fill="currentColor" stroke="none"/></svg>Videos</button>
+  <button data-tab="tab-equipo" onclick="App.go('tab-equipo',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Equipo</button>
+  <button data-tab="tab-perfil" onclick="App.go('tab-perfil',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="9" r="3.2"/><path d="M6.5 19a5.5 5.5 0 0 1 11 0"/></svg>Perfil</button>
+</nav>
+
+<div id="modal"><div class="sheet" id="sheet"></div></div>
+<div id="agentview" style="display:none;position:fixed;inset:0;z-index:90;background:var(--bg);overflow-y:auto;"></div>
+
+<script>
+/* ============================================================
+   DB — capa de datos local (localStorage, clave "agencia_db_v1")
+   ------------------------------------------------------------
+   PUNTO DE SINCRONIZACIÓN: para que la empresa asigne referidos
+   de verdad a todo el equipo, reemplaza DB.load/DB.save por
+   llamadas a Supabase o a una API REST aquí. Todo el resto de la
+   app usa DB.getAgents(), DB.savePost(), etc., así que el cambio
+   queda aislado en este objeto.
+   ============================================================ */
+const LS_KEY = 'agencia_db_v1';
+const H = 3600e3, D = 24 * H;
+
+function seed() {
+  const now = Date.now();
+  return {
+    agents: [
+      {id:'yo', name:'Jose David Pacheco', team:'Gladiadores Alpha', role:'Supervisor', clients:34, salesMonth:6, alp:4250, color:'#1877f2', followers:['a2','a3','a5','a7'], following:['a2','a3','a4']},
+      {id:'a2', name:'Ana Martínez', team:'Gladiadores Alpha', role:'Agente', clients:41, salesMonth:8, alp:6100, color:'#e91e63', followers:['yo','a3'], following:['yo','a4']},
+      {id:'a3', name:'Carlos Ruiz', team:'Gladiadores Alpha', role:'Agente', clients:28, salesMonth:5, alp:3800, color:'#9c27b0', followers:['yo'], following:['yo','a2']},
+      {id:'a4', name:'Lucía Fernández', team:'Gladiadores Beta', role:'Agente', clients:35, salesMonth:7, alp:5200, color:'#ff5722', followers:['yo','a6'], following:['a2']},
+      {id:'a5', name:'Miguel Torres', team:'Gladiadores Alpha', role:'Agente', clients:22, salesMonth:4, alp:2900, color:'#009688', followers:['yo'], following:['a2','a7']},
+      {id:'a6', name:'Sofía Hernández', team:'Gladiadores Beta', role:'Agente', clients:31, salesMonth:6, alp:4400, color:'#3f51b5', followers:['a4'], following:['a7']},
+      {id:'a7', name:'Diego Ramírez', team:'Gladiadores Beta', role:'Supervisor', clients:52, salesMonth:9, alp:7300, color:'#795548', followers:['a5','a6'], following:['a4']},
+      {id:'a8', name:'Valeria Castro', team:'Gladiadores Alpha', role:'Agente', clients:18, salesMonth:3, alp:2100, color:'#607d8b', followers:[], following:['yo']},
+      {id:'a9', name:'Andrés Morales', team:'Gladiadores Beta', role:'Agente', clients:26, salesMonth:5, alp:3600, color:'#c2185b', followers:[], following:['a7']},
+      {id:'empresa', name:'Gladiadores · Empresa', team:'Empresa', role:'Cuenta oficial', clients:0, salesMonth:0, alp:0, color:'#b8860b', followers:[], following:[], company:true}
+    ],
+    posts: [
+      {id:'p1', by:'empresa', type:'empresa', text:'🎉 ¡Felicidades al equipo Gladiadores Alpha! Cerramos la semana con 24 familias protegidas. ¡Vamos por más esta semana! ⚔️', ts: now - 2*H, likes:['a2','a3','a4'],
+       comments:[{by:'a2', text:'¡Vamos con todo! 💪', ts: now - 1.5*H},{by:'yo', text:'Gran semana equipo 🙌', ts: now - 1*H}]},
+      {id:'p2', by:'a2', type:'venta', text:'🎉 ¡Venta cerrada! +1 cliente protegido 🛡️ La familia Hernández ya duerme tranquila.', ts: now - 5*H, likes:['yo','a3'], comments:[{by:'yo', text:'¡Felicidades Ana! 🎉', ts: now - 4*H}]},
+      {id:'p3', by:'a5', type:'tip', text:'💡 Tip de ventas: en la apertura pregunta primero por su seguro de carro antes de hablar de precio. El anclaje hace el resto.', ts: now - 8*H, likes:['yo','a2','a7'], comments:[]},
+      {id:'p4', by:'empresa', type:'empresa', text:'📚 Nuevo material educativo: revisa la pestaña Videos — agregamos la serie "Protección familiar" para tus presentaciones.', ts: now - 1*D, likes:['a2'], comments:[{by:'a4', text:'Ya la estoy usando en mis citas 👍', ts: now - 20*H}]},
+      {id:'p5', by:'a3', type:'venta', text:'🎉 ¡Venta cerrada! +1 cliente protegido 🛡️', ts: now - 2*D, likes:['yo','a2'], comments:[]},
+      {id:'p6', by:'yo', type:'venta', text:'🎉 ¡Venta cerrada! +1 cliente protegido 🛡️', ts: now - 3*D, likes:['a2','a3','a4','a5'], comments:[{by:'a7', text:'¡Ese es el espíritu de gladiador! ⚔️', ts: now - 3*D + 2*H}]}
+    ],
+    referrals: [
+      {id:'r1', name:'María González', phone:'385-555-0142', referredBy:'Campaña Facebook', notes:'Interesada en seguro de vida', assignedBy:'empresa', status:'nuevo', ts: now - 3*H},
+      {id:'r2', name:'Jorge Ramírez', phone:'801-555-0193', referredBy:'Referido web', notes:'Quiere cotización familiar', assignedBy:'empresa', status:'nuevo', ts: now - 1*D},
+      {id:'r3', name:'Lucía Fernández', phone:'385-555-0117', referredBy:'Evento comunitario', notes:'Seguimiento esta semana', assignedBy:'empresa', status:'nuevo', ts: now - 2*D},
+      {id:'r4', name:'Pedro Sánchez', phone:'801-555-0168', referredBy:'Cliente actual', notes:'Hermano de un cliente', assignedBy:'yo', status:'contactado', ts: now - 4*D},
+      {id:'r5', name:'Ana Torres', phone:'385-555-0129', referredBy:'Yo', notes:'', assignedBy:'yo', status:'nuevo', ts: now - 5*D}
+    ],
+    videos: [
+      {id:'v1', title:'Cómo presentar la protección familiar', cat:'Ventas', by:'empresa', url:'', ts: now - 2*D},
+      {id:'v2', title:'Qué cubre un seguro de vida', cat:'Educativo', by:'empresa', url:'', ts: now - 4*D},
+      {id:'v3', title:'Nuevos productos 2026', cat:'Producto', by:'a2', url:'', ts: now - 6*D}
+    ]
+  };
+}
+
+const DB = {
+  data: null,
+  load() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) { this.data = JSON.parse(raw); return; }
+    } catch (e) {}
+    this.data = seed();
+    this.save();
+  },
+  save() { try { localStorage.setItem(LS_KEY, JSON.stringify(this.data)); } catch (e) {} },
+  getAgents() { return this.data.agents.filter(a => !a.company); },
+  getAgent(id) { return this.data.agents.find(a => a.id === id); },
+  me() { return this.getAgent('yo'); },
+  getTeams() { const s = new Set(); this.getAgents().forEach(a => s.add(a.team)); return [...s]; },
+  savePost(p) { this.data.posts.unshift(p); this.save(); },
+  likePost(id, who) {
+    const p = this.data.posts.find(x => x.id === id); if (!p) return false;
+    const i = p.likes.indexOf(who);
+    if (i >= 0) p.likes.splice(i, 1); else p.likes.push(who);
+    this.save(); return i < 0;
+  },
+  addComment(postId, c) { const p = this.data.posts.find(x => x.id === postId); if (p) { p.comments.push(c); this.save(); } },
+  saveReferral(r) { this.data.referrals.unshift(r); this.save(); },
+  updateReferral(id, patch) { const r = this.data.referrals.find(x => x.id === id); if (r) { Object.assign(r, patch); this.save(); } },
+  deleteReferral(id) { this.data.referrals = this.data.referrals.filter(x => x.id !== id); this.save(); },
+  saveVideo(v) { this.data.videos.unshift(v); this.save(); },
+  updateVideo(id, patch) { const v = this.data.videos.find(x => x.id === id); if (v) { Object.assign(v, patch); this.save(); } },
+  follow(id) {
+    const me = this.me(), o = this.getAgent(id);
+    if (!me || !o || id === 'yo' || id === 'empresa') return;
+    if (!me.following.includes(id)) me.following.push(id);
+    if (!o.followers.includes('yo')) o.followers.push('yo');
+    this.save();
+  },
+  unfollow(id) {
+    const me = this.me(), o = this.getAgent(id);
+    if (!me || !o) return;
+    me.following = me.following.filter(x => x !== id);
+    o.followers = o.followers.filter(x => x !== 'yo');
+    this.save();
+  },
+  updateMe(patch) { Object.assign(this.me(), patch); this.save(); }
+};
+
+/* ---------- helpers ---------- */
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function uid(p) { return p + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36); }
+function initials(name) { return name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join(''); }
+function firstName(name) { return name.split(/\s+/)[0]; }
+function fmtMoney(n) { return '$' + Number(n || 0).toLocaleString('en-US'); }
+function haceCuanto(ts) {
+  const s = (Date.now() - ts) / 1000;
+  if (s < 60) return 'ahora mismo';
+  const m = Math.floor(s / 60); if (m < 60) return 'hace ' + m + ' min';
+  const h = Math.floor(m / 60); if (h < 24) return 'hace ' + h + ' h';
+  const d = Math.floor(h / 24); if (d === 1) return 'ayer'; if (d < 7) return 'hace ' + d + ' d';
+  return new Date(ts).toLocaleDateString('es');
+}
+function avatarHTML(a, size) {
+  size = size || 44;
+  const label = a.company ? '⚔️' : esc(initials(a.name));
+  return '<div class="av" style="width:' + size + 'px;height:' + size + 'px;background:' + a.color + ';font-size:' + Math.round(size * 0.38) + 'px;">' + label + '</div>';
+}
+function openSheet(html) { document.getElementById('sheet').innerHTML = html; document.getElementById('modal').classList.add('open'); }
+function closeSheet() { document.getElementById('modal').classList.remove('open'); }
+document.getElementById('modal').addEventListener('click', function (e) { if (e.target.id === 'modal') closeSheet(); });
+function embedURL(url) {
+  if (!url) return '';
+  let m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{6,})/);
+  if (m) return 'https://www.youtube.com/embed/' + m[1];
+  m = url.match(/vimeo\.com\/(\d+)/);
+  if (m) return 'https://player.vimeo.com/video/' + m[1];
+  return url;
+}
+
+/* ============================================================
+   App — lógica de la interfaz
+   ============================================================ */
+const App = {
+  refSegCur: 'asignados',
+  vidCatCur: 'todos',
+  pfTabCur: 'refs',
+  composerType: 'venta',
+  openComments: {},
+
+  go(tab, btn) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('act'));
+    document.getElementById(tab).classList.add('act');
+    document.querySelectorAll('nav.bottom button').forEach(b => b.classList.remove('act'));
+    if (btn) btn.classList.add('act'); else {
+      const b = document.querySelector('nav.bottom button[data-tab="' + tab + '"]');
+      if (b) b.classList.add('act');
+    }
+    window.scrollTo(0, 0);
+    if (tab === 'tab-equipo') this.renderTeam();
+    if (tab === 'tab-perfil') this.renderProfile();
+  },
+
+  /* ---------- INICIO ---------- */
+  renderStories() {
+    const agents = DB.getAgents().slice(0, 8);
+    document.getElementById('stories').innerHTML = agents.map(a =>
+      '<button class="story" onclick="App.openAgent(\'' + a.id + '\')">' +
+      '<span class="ring"><span class="av" style="background:' + a.color + '">' + esc(initials(a.name)) + '</span></span>' +
+      '<span class="nm">' + esc(firstName(a.name)) + '</span></button>'
+    ).join('');
+    const me = DB.me();
+    document.getElementById('composer-av').outerHTML = avatarHTML(me, 40).replace('class="av"', 'class="av" id="composer-av"');
+  },
+
+  postCard(p) {
+    const a = DB.getAgent(p.by) || DB.getAgent('empresa');
+    const liked = p.likes.includes('yo');
+    const badge = p.by === 'empresa' ? '<span class="badge-empresa">EMPRESA</span>' : '';
+    const comOpen = this.openComments[p.id];
+    const waText = encodeURIComponent(p.text + ' — vía App Gladiadores ⚔️');
+    let html = '<div class="post">' +
+      '<div class="ph">' + avatarHTML(a, 44) +
+      '<div class="grow"><div class="pn">' + esc(a.name) + ' ' + badge + '</div>' +
+      '<div class="pt">' + haceCuanto(p.ts) + '</div></div></div>' +
+      '<div class="ptext">' + esc(p.text) + '</div>' +
+      '<div class="actions">' +
+      '<button class="' + (liked ? 'liked' : '') + '" onclick="App.toggleLike(\'' + p.id + '\')">' +
+      (liked ? '❤️' : '🤍') + ' Me gusta' + (p.likes.length ? ' (' + p.likes.length + ')' : '') + '</button>' +
+      '<button onclick="App.toggleComments(\'' + p.id + '\')">💬 Comentar' + (p.comments.length ? ' (' + p.comments.length + ')' : '') + '</button>' +
+      '<a href="https://wa.me/?text=' + waText + '" target="_blank" rel="noopener" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;color:var(--mut);font-size:13px;font-weight:600;padding:8px;text-decoration:none;">📲 Compartir</a>' +
+      '</div>';
+    if (comOpen) {
+      html += '<div class="comments">' + p.comments.map(c => {
+        const ca = DB.getAgent(c.by) || DB.getAgent('empresa');
+        return '<div class="comment">' + avatarHTML(ca, 32) + '<div class="cb"><b>' + esc(ca.name) + '</b><p>' + esc(c.text) + '</p></div></div>';
+      }).join('') +
+      '<div class="cform"><input id="c-' + p.id + '" placeholder="Escribe un comentario..." onkeydown="if(event.key===\'Enter\')App.addComment(\'' + p.id + '\')">' +
+      '<button onclick="App.addComment(\'' + p.id + '\')">➤</button></div></div>';
+    }
+    return html + '</div>';
+  },
+
+  renderFeed() {
+    const posts = DB.data.posts.slice().sort((a, b) => b.ts - a.ts);
+    document.getElementById('feed').innerHTML = posts.length ? posts.map(p => this.postCard(p)).join('')
+      : '<div class="empty">Aún no hay publicaciones. ¡Sé el primero! 🎉</div>';
+  },
+
+  setComposerType(t, btn) {
+    this.composerType = t;
+    document.querySelectorAll('#composer-types button').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+  },
+
+  publish() {
+    const ta = document.getElementById('composer-text');
+    let text = ta.value.trim();
+    const t = this.composerType;
+    if (t === 'venta') {
+      text = '🎉 ¡Venta cerrada! +1 cliente protegido 🛡️' + (text ? ' ' + text : '');
+      DB.me().clients += 1;
+      DB.me().salesMonth += 1;
+    } else if (t === 'tip') {
+      text = (text.startsWith('💡') ? '' : '💡 Tip: ') + text;
+    }
+    if (!text.replace(/[🎉💡🛡️: ]/g, '').trim() && t !== 'venta') { alert('Escribe algo para publicar.'); return; }
+    DB.savePost({ id: uid('p'), by: 'yo', type: t, text: text, ts: Date.now(), likes: [], comments: [] });
+    ta.value = '';
+    this.renderFeed(); this.renderProfile();
+  },
+
+  toggleLike(id) { DB.likePost(id, 'yo'); this.renderFeed(); },
+  toggleComments(id) { this.openComments[id] = !this.openComments[id]; this.renderFeed(); },
+  addComment(id) {
+    const inp = document.getElementById('c-' + id);
+    const text = inp.value.trim(); if (!text) return;
+    DB.addComment(id, { by: 'yo', text: text, ts: Date.now() });
+    this.openComments[id] = true; this.renderFeed();
+  },
+
+  /* ---------- REFERIDOS ---------- */
+  refSeg(s, btn) {
+    this.refSegCur = s;
+    document.querySelectorAll('#ref-seg button').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    this.renderRefs();
+  },
+
+  statusLabel(s) { return { nuevo: 'Nuevo', aceptado: 'Aceptado', contactado: 'Contactado', cerrado: 'Cerrado' }[s] || s; },
+  nextStatus(s) { return { nuevo: 'contactado', contactado: 'cerrado', cerrado: 'nuevo', aceptado: 'contactado' }[s] || 'nuevo'; },
+
+  refCard(r) {
+    const assigned = r.assignedBy === 'empresa';
+    let btns = '';
+    if (assigned && r.status === 'nuevo') {
+      btns = '<div class="rbtns"><button class="btn btn-green" onclick="App.acceptRef(\'' + r.id + '\')">✅ Aceptar</button>' +
+        '<button class="btn btn-red" onclick="App.rejectRef(\'' + r.id + '\')">✖ Rechazar</button></div>';
+    } else {
+      btns = '<button class="btn btn-ghost btn-sm mt" onclick="App.cycleRef(\'' + r.id + '\')">🔄 Marcar: ' + this.statusLabel(this.nextStatus(r.status)) + '</button>';
+    }
+    return '<div class="ref"><div class="rn">' + esc(r.name) + '</div>' +
+      '<div class="rd">📞 ' + esc(r.phone || '—') + ' · Refiere: ' + esc(r.referredBy || '—') + '</div>' +
+      (r.notes ? '<div class="rd">📝 ' + esc(r.notes) + '</div>' : '') +
+      '<span class="chip st-' + r.status + '">' + this.statusLabel(r.status) + '</span>' +
+      (assigned ? '<div class="asig">🏢 Asignado por la empresa · ' + haceCuanto(r.ts) + '</div>' : '') +
+      btns + '</div>';
+  },
+
+  renderRefs() {
+    const all = DB.data.referrals.slice().sort((a, b) => b.ts - a.ts);
+    const list = this.refSegCur === 'asignados'
+      ? all.filter(r => r.assignedBy === 'empresa')
+      : all.filter(r => r.assignedBy === 'yo');
+    document.getElementById('ref-list').innerHTML = list.length ? list.map(r => this.refCard(r)).join('')
+      : '<div class="empty">No hay referidos aquí todavía.</div>';
+  },
+
+  acceptRef(id) { DB.updateReferral(id, { assignedBy: 'yo', status: 'aceptado' }); this.renderRefs(); },
+  rejectRef(id) { if (confirm('¿Rechazar este referido asignado?')) { DB.deleteReferral(id); this.renderRefs(); } },
+  cycleRef(id) { const r = DB.data.referrals.find(x => x.id === id); if (r) { DB.updateReferral(id, { status: this.nextStatus(r.status) }); this.renderRefs(); this.renderProfile(); } },
+
+  addReferral() {
+    const name = document.getElementById('rf-nombre').value.trim();
+    if (!name) { alert('Ponle un nombre al referido.'); return; }
+    DB.saveReferral({
+      id: uid('r'), name: name,
+      phone: document.getElementById('rf-tel').value.trim(),
+      referredBy: document.getElementById('rf-origen').value.trim(),
+      notes: document.getElementById('rf-notas').value.trim(),
+      assignedBy: 'yo', status: 'nuevo', ts: Date.now()
+    });
+    ['rf-nombre', 'rf-tel', 'rf-origen', 'rf-notas'].forEach(i => document.getElementById(i).value = '');
+    if (this.refSegCur !== 'mios') this.refSeg('mios', document.querySelector('#ref-seg button[data-s="mios"]'));
+    else this.renderRefs();
+    this.renderProfile();
+  },
+
+  /* ---------- VIDEOS ---------- */
+  vidCat(c, btn) {
+    this.vidCatCur = c;
+    document.querySelectorAll('#vid-cats button').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    this.renderVideos();
+  },
+
+  videoCard(v) {
+    const a = DB.getAgent(v.by) || DB.getAgent('empresa');
+    const has = !!v.url;
+    return '<button class="vcard" onclick="App.openVideo(\'' + v.id + '\')">' +
+      '<div class="vthumb' + (has ? '' : ' nolink') + '"><div class="play">▶</div>' +
+      (has ? '' : '<div class="pend">🔗 Enlace pendiente — tócalo para agregarlo</div>') + '</div>' +
+      '<div class="vmeta"><div class="vt">' + esc(v.title) + '</div>' +
+      '<div class="vc"><span class="vcat">' + esc(v.cat) + '</span> · ' + esc(firstName(a.name)) + ' · ' + haceCuanto(v.ts) + '</div></div></button>';
+  },
+
+  renderVideos() {
+    const list = DB.data.videos.filter(v => this.vidCatCur === 'todos' || v.cat === this.vidCatCur);
+    document.getElementById('vgrid').innerHTML = list.length ? list.map(v => this.videoCard(v)).join('')
+      : '<div class="empty" style="grid-column:1/-1;">No hay videos en esta categoría.</div>';
+  },
+
+  openVideo(id) {
+    const v = DB.data.videos.find(x => x.id === id); if (!v) return;
+    const a = DB.getAgent(v.by) || DB.getAgent('empresa');
+    if (!v.url) {
+      openSheet('<button class="x" onclick="closeSheet()">✕</button><h2>🔗 Agregar enlace</h2>' +
+        '<p class="small"><b>' + esc(v.title) + '</b> aún no tiene video. Pega el enlace de YouTube o Vimeo:</p>' +
+        '<input class="fi" id="vu-url" inputmode="url" placeholder="https://...">' +
+        '<button class="btn btn-blue" onclick="App.saveVideoURL(\'' + v.id + '\')">Guardar enlace</button>');
+      return;
+    }
+    openSheet('<button class="x" onclick="closeSheet()">✕</button><h2>' + esc(v.title) + '</h2>' +
+      '<p class="small">' + esc(v.cat) + ' · por ' + esc(a.name) + '</p>' +
+      '<div class="vframe"><iframe src="' + esc(embedURL(v.url)) + '" allowfullscreen allow="accelerometer; autoplay; encrypted-media; picture-in-picture"></iframe></div>');
+  },
+
+  saveVideoURL(id) {
+    const url = document.getElementById('vu-url').value.trim();
+    if (!url) { alert('Pega el enlace del video.'); return; }
+    DB.updateVideo(id, { url: url });
+    closeSheet(); this.renderVideos(); this.renderProfile();
+  },
+
+  addVideo() {
+    const title = document.getElementById('vd-titulo').value.trim();
+    if (!title) { alert('Ponle un título al video.'); return; }
+    DB.saveVideo({
+      id: uid('v'), title: title,
+      cat: document.getElementById('vd-cat').value,
+      by: 'yo', url: document.getElementById('vd-url').value.trim(), ts: Date.now()
+    });
+    document.getElementById('vd-titulo').value = '';
+    document.getElementById('vd-url').value = '';
+    this.renderVideos(); this.renderProfile();
+  },
+
+  /* ---------- EQUIPO ---------- */
+  renderTeam() {
+    const q = (document.getElementById('team-q').value || '').toLowerCase();
+    const tf = document.getElementById('team-f').value;
+    const me = DB.me();
+    const list = DB.getAgents().filter(a =>
+      (!q || a.name.toLowerCase().includes(q)) && (!tf || a.team === tf));
+    document.getElementById('team-list').innerHTML = list.length ? list.map(a => {
+      const following = me.following.includes(a.id);
+      const isMe = a.id === 'yo';
+      return '<button class="acard" onclick="App.openAgent(\'' + a.id + '\')">' +
+        '<div class="row">' + avatarHTML(a, 52) +
+        '<div class="grow"><div style="font-weight:800;font-size:15px;">' + esc(a.name) + (isMe ? ' <span class="small">(tú)</span>' : '') + '</div>' +
+        '<div class="small">' + esc(a.role) + ' · ' + esc(a.team) + '</div></div>' +
+        (isMe ? '' : '<span class="btn btn-sm ' + (following ? 'btn-ghost' : 'btn-blue') + '" onclick="event.stopPropagation();App.toggleFollow(\'' + a.id + '\')">' +
+          (following ? 'Siguiendo ✓' : '＋ Seguir') + '</span>') + '</div>' +
+        '<div class="stats"><div><div class="n">' + a.clients + '</div><div class="l">Clientes</div></div>' +
+        '<div><div class="n">' + a.salesMonth + '</div><div class="l">Ventas mes</div></div>' +
+        '<div><div class="n">' + fmtMoney(a.alp) + '</div><div class="l">ALP</div></div>' +
+        '<div><div class="n">' + a.followers.length + '</div><div class="l">Seguidores</div></div></div></button>';
+    }).join('') : '<div class="empty">Sin resultados para esa búsqueda.</div>';
+  },
+
+  toggleFollow(id) {
+    const me = DB.me();
+    if (me.following.includes(id)) DB.unfollow(id); else DB.follow(id);
+    this.renderTeam(); this.renderProfile();
+    if (document.getElementById('agentview').style.display !== 'none') this.openAgent(id, true);
+  },
+
+  openAgent(id, keep) {
+    const a = DB.getAgent(id); if (!a) return;
+    const me = DB.me();
+    const following = me.following.includes(id);
+    const posts = DB.data.posts.filter(p => p.by === id).slice(0, 5);
+    const vids = DB.data.videos.filter(v => v.by === id);
+    const html =
+      '<div style="position:sticky;top:0;background:var(--card);border-bottom:1px solid var(--border);padding:10px 14px;z-index:5;">' +
+      '<button class="btn btn-ghost btn-sm" onclick="document.getElementById(\'agentview\').style.display=\'none\'">← Volver</button></div>' +
+      '<div class="cover"></div><div class="pwrap">' +
+      '<div class="pav" style="background:' + a.color + '">' + (a.company ? '⚔️' : esc(initials(a.name))) + '</div>' +
+      '<div class="row"><div class="grow"><div class="pname">' + esc(a.name) + '</div><div class="prole">' + esc(a.role) + ' · ' + esc(a.team) + '</div></div>' +
+      (id !== 'yo' && !a.company ? '<button class="btn btn-sm ' + (following ? 'btn-ghost' : 'btn-blue') + '" onclick="App.toggleFollow(\'' + id + '\')">' +
+        (following ? 'Siguiendo ✓' : '＋ Seguir') + '</button>' : '') + '</div>' +
+      '<div class="pstats"><div><div class="n">' + a.clients + '</div><div class="l">Clientes</div></div>' +
+      '<div><div class="n">' + a.salesMonth + '</div><div class="l">Ventas</div></div>' +
+      '<div><div class="n">' + fmtMoney(a.alp) + '</div><div class="l">ALP</div></div>' +
+      '<div><div class="n">' + a.followers.length + '</div><div class="l">Seguidores</div></div></div>' +
+      '<h3 style="font-size:15px;margin:14px 0 4px;">Publicaciones recientes</h3>' +
+      (posts.length ? posts.map(p => this.postCard(p)).join('').replace(/<div class="post">/g, '<div class="post" style="margin:10px 0;">') : '<div class="empty">Sin publicaciones.</div>') +
+      '<h3 style="font-size:15px;margin:14px 0 4px;">Videos</h3>' +
+      (vids.length ? '<div class="vgrid" style="padding:4px 0 12px;">' + vids.map(v => this.videoCard(v)).join('') + '</div>' : '<div class="empty">Sin videos.</div>') +
+      '<div style="height:30px;"></div></div>';
+    const av = document.getElementById('agentview');
+    av.innerHTML = html; av.style.display = 'block'; av.scrollTop = 0;
+  },
+
+  /* ---------- PERFIL ---------- */
+  renderProfile() {
+    const me = DB.me();
+    document.getElementById('pf-av').outerHTML = avatarHTML(me, 96).replace('class="av"', 'class="pav" id="pf-av"').replace(/style="[^"]*"/, 'style="background:' + me.color + '"');
+    document.getElementById('pf-name').textContent = me.name;
+    document.getElementById('pf-role').textContent = me.role + ' · ' + me.team;
+    document.getElementById('pf-stats').innerHTML =
+      '<div><div class="n">' + me.clients + '</div><div class="l">Clientes</div></div>' +
+      '<div><div class="n">' + me.salesMonth + '</div><div class="l">Ventas</div></div>' +
+      '<div><div class="n">' + fmtMoney(me.alp) + '</div><div class="l">ALP</div></div>' +
+      '<div><div class="n">' + me.followers.length + '</div><div class="l">Seguidores</div></div>' +
+      '<div><div class="n">' + me.following.length + '</div><div class="l">Seguidos</div></div>';
+    this.renderPfBody();
+  },
+
+  pfTab(t, btn) {
+    this.pfTabCur = t;
+    document.querySelectorAll('#pf-subtabs button').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    this.renderPfBody();
+  },
+
+  renderPfBody() {
+    const body = document.getElementById('pf-body');
+    if (this.pfTabCur === 'refs') {
+      const list = DB.data.referrals.filter(r => r.assignedBy === 'yo').sort((a, b) => b.ts - a.ts);
+      body.innerHTML = list.length ? list.map(r => this.refCard(r)).join('').replace(/<div class="ref">/g, '<div class="ref" style="margin:10px 0;">')
+        : '<div class="empty">Aún no tienes referidos.</div>';
+    } else if (this.pfTabCur === 'vids') {
+      const list = DB.data.videos.filter(v => v.by === 'yo');
+      body.innerHTML = list.length ? '<div class="vgrid" style="padding:4px 0 12px;">' + list.map(v => this.videoCard(v)).join('') + '</div>'
+        : '<div class="empty">Aún no has subido videos.</div>';
+    } else {
+      const list = DB.data.posts.filter(p => p.by === 'yo' && p.type === 'venta').sort((a, b) => b.ts - a.ts);
+      body.innerHTML = list.length ? list.map(p => this.postCard(p)).join('').replace(/<div class="post">/g, '<div class="post" style="margin:10px 0;">')
+        : '<div class="empty">Tus ventas cerradas aparecerán aquí. 🏆</div>';
+    }
+  },
+
+  editProfile() {
+    const me = DB.me();
+    const teams = DB.getTeams();
+    openSheet('<button class="x" onclick="closeSheet()">✕</button><h2>✏️ Editar perfil</h2>' +
+      '<label class="fl">Nombre</label><input class="fi" id="ep-name" value="' + esc(me.name) + '">' +
+      '<label class="fl">Equipo</label><select class="fi" id="ep-team">' +
+      teams.map(t => '<option' + (t === me.team ? ' selected' : '') + '>' + esc(t) + '</option>').join('') + '</select>' +
+      '<button class="btn btn-blue" onclick="App.saveProfile()">Guardar</button>');
+  },
+
+  saveProfile() {
+    const name = document.getElementById('ep-name').value.trim();
+    const team = document.getElementById('ep-team').value;
+    if (!name) { alert('El nombre no puede estar vacío.'); return; }
+    DB.updateMe({ name: name, team: team });
+    closeSheet(); this.renderProfile(); this.renderStories();
+  },
+
+  /* ---------- init ---------- */
+  init() {
+    DB.load();
+    // equipo: llenar filtro de equipos
+    document.getElementById('team-f').innerHTML = '<option value="">Todos los equipos</option>' +
+      DB.getTeams().map(t => '<option>' + esc(t) + '</option>').join('');
+    document.querySelectorAll('#composer-types button').forEach(b =>
+      b.addEventListener('click', () => this.setComposerType(b.dataset.t, b)));
+    this.renderStories();
+    this.renderFeed();
+    this.renderRefs();
+    this.renderVideos();
+    this.renderTeam();
+    this.renderProfile();
+  }
+};
+
+App.init();
+</script>
+</body>
+</html>
