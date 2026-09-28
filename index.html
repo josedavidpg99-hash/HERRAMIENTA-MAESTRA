@@ -325,6 +325,11 @@ textarea{min-height:64px; resize:vertical;}
   <div class="card">
     <h2>📝 Reporte diario</h2>
     <p class="small">Tu registro diario estilo Gladiators. Llena tus números al terminar el día.</p>
+    <label>Agente</label>
+    <div style="display:flex;gap:8px;">
+      <select id="rp-agente" style="flex:1" onchange="save('gl_agente_actual',this.value);renderHoy()"></select>
+      <button class="btn btn-ghost" style="width:auto;margin:0;padding:11px 16px;" onclick="nuevoAgente()">＋</button>
+    </div>
     <label>Fecha</label><input id="rp-fecha" type="date">
     <div class="row2">
       <div><label>Citas agendadas</label><input id="rp-ag" type="number" min="0" value="0"></div>
@@ -342,7 +347,9 @@ textarea{min-height:64px; resize:vertical;}
   </div>
   <div class="card">
     <h2>📊 Resumen de la semana</h2>
-    <div id="rep-semana"></div>
+    <label>Reporte personal de</label>
+    <select id="rp-ver" onchange="renderReportes()"></select>
+    <div id="rep-semana" style="margin-top:10px;"></div>
     <button class="btn btn-wa" onclick="waReporte()">Enviar reporte por WhatsApp 📲</button>
   </div>
   <div class="card">
@@ -582,11 +589,30 @@ function renderEmbudo(){const e=load('gl_embudo',{ag:0,re:0,ve:0,rf:0});
   $('embudo-out').innerHTML=embudoHTML(e);}
 
 /* ===== REPORTE ===== */
+/* Roster de agentes activos — Gladiator's Team (herramienta original) */
+const ROSTER=["Andres Lopez","Bleidy Mendez","Claudia Florez","Cristian Correa","Deadier Velasquez","Deisy Aguirre","Domenico Novara","Edinson Romero","Estefani Bustillo","Freddy Mota","Genesis Fuenmayor","German Manrique","Grecia Ferrer","Henry Cortes","Ivana Ferrer","Jackson Ovalles","Johanna Manrique","Jorge Moreno","Jose Pacheco","Julieth Quinonez","Julimar Colona","Laura Arellano","Laura Thorne","Maria Quintana","Marlon Barahona","Moises Nunez","Ossman Castro","Paula Rodriguez","Rachael Reyes","Raul Silva","Sebastian Davila","Shirley Florez","Valentina Jaimes","Wilmer Ramirez","Yamilet Alvarez","Yare Rodriguez","Yeni Lozano"];
+function listaAgentes(){const c=load('gl_agentes_custom',[]);return[...new Set([...ROSTER,...c])].sort((a,b)=>a.localeCompare(b,'es'));}
+function agenteActual(){const a=load('gl_agente_actual','Jose Pacheco');return listaAgentes().includes(a)?a:'Jose Pacheco';}
+function poblarAgentes(){
+  const lista=listaAgentes(),act=agenteActual();
+  const opts=lista.map(n=>`<option ${n===act?'selected':''}>${esc(n)}</option>`).join('');
+  $('rp-agente').innerHTML=opts; $('rp-ver').innerHTML=opts;
+}
+function nuevoAgente(){
+  const n=prompt('Nombre del nuevo agente:');
+  if(!n||!n.trim())return;
+  const nom=n.trim(),c=load('gl_agentes_custom',[]);
+  if(!ROSTER.includes(nom)&&!c.includes(nom)){c.push(nom);save('gl_agentes_custom',c);}
+  save('gl_agente_actual',nom); poblarAgentes(); renderReportes(); renderHoy();
+}
+const agDe=r=>(r.agente||'Jose Pacheco');
 function guardarReporte(){
   const fecha=$('rp-fecha').value||hoyISO();
-  const r={id:Date.now(),fecha,ag:+$('rp-ag').value||0,re:+$('rp-re').value||0,pr:+$('rp-pr').value||0,
+  const ag=$('rp-agente').value||'Jose Pacheco';
+  save('gl_agente_actual',ag);
+  const r={id:Date.now(),fecha,agente:ag,ag:+$('rp-ag').value||0,re:+$('rp-re').value||0,pr:+$('rp-pr').value||0,
     ve:+$('rp-ve').value||0,alp:+$('rp-alp').value||0,rf:+$('rp-rf').value||0};
-  let reps=load('gl_reps',[]).filter(x=>x.fecha!==fecha);
+  let reps=load('gl_reps',[]).filter(x=>!(x.fecha===fecha&&agDe(x)===ag));
   reps.push(r); save('gl_reps',reps);
   ['rp-ag','rp-re','rp-pr','rp-ve','rp-alp','rp-rf'].forEach(i=>$(i).value=0);
   $('rp-fecha').value=hoyISO();
@@ -598,8 +624,9 @@ function semanaRango(){
   return [ini.toISOString().slice(0,10),fin.toISOString().slice(0,10)];
 }
 function renderReportes(){
+  const ver=($('rp-ver')&&$('rp-ver').value)||agenteActual();
   const[ini,fin]=semanaRango();
-  const reps=load('gl_reps',[]).filter(x=>x.fecha>=ini&&x.fecha<=fin);
+  const reps=load('gl_reps',[]).filter(x=>x.fecha>=ini&&x.fecha<=fin&&agDe(x)===ver);
   const t=k=>reps.reduce((a,x)=>a+(+x[k]||0),0);
   const T={ag:t('ag'),re:t('re'),pr:t('pr'),ve:t('ve'),alp:t('alp'),rf:t('rf')};
   const conv=(a,b)=>b>0?Math.round(a/b*100)+'%':'—';
@@ -614,9 +641,9 @@ function renderReportes(){
     <div class="fila"><span>🤝 Referidos</span><b>${T.rf}</b></div>
     <div class="fila"><span>Efectividad cita → presentación</span><b>${conv(T.pr,T.re)}</b></div>
     <div class="fila"><span>Cierre presentación → venta</span><b>${conv(T.ve,T.pr)}</b></div>`;
-  const ult=load('gl_reps',[]).slice().sort((a,b)=>b.fecha.localeCompare(a.fecha)).slice(0,10);
+  const ult=load('gl_reps',[]).filter(x=>agDe(x)===ver).slice().sort((a,b)=>b.fecha.localeCompare(a.fecha)).slice(0,10);
   $('lista-rep').innerHTML=ult.length?ult.map(r=>`
-    <div class="item"><div class="t">📅 ${fmtFecha(r.fecha)}</div>
+    <div class="item"><div class="t">📅 ${fmtFecha(r.fecha)} <span class="badge b-cita">${esc(agDe(r))}</span></div>
       <div class="s">Ag:${r.ag} · Re:${r.re} · Pres:${r.pr} · Ventas:${r.ve} · ALP:$${(+r.alp).toLocaleString('en-US')} · Ref:${r.rf}</div>
       <div class="acts"><button onclick="borrarRep(${r.id})">Borrar</button></div></div>`).join('')
     :'<p class="small">Sin reportes aún.</p>';
@@ -624,12 +651,13 @@ function renderReportes(){
 function borrarRep(id){if(!confirm('¿Borrar reporte?'))return;
   save('gl_reps',load('gl_reps',[]).filter(x=>x.id!==id));renderReportes();renderHoy();}
 function waReporte(){
+  const ver=($('rp-ver')&&$('rp-ver').value)||agenteActual();
   const[ini,fin]=semanaRango();
-  const reps=load('gl_reps',[]).filter(x=>x.fecha>=ini&&x.fecha<=fin);
-  if(!reps.length){alert('No hay reportes esta semana');return;}
+  const reps=load('gl_reps',[]).filter(x=>x.fecha>=ini&&x.fecha<=fin&&agDe(x)===ver);
+  if(!reps.length){alert('No hay reportes esta semana para '+ver);return;}
   const t=k=>reps.reduce((a,x)=>a+(+x[k]||0),0);
   const T={ag:t('ag'),re:t('re'),pr:t('pr'),ve:t('ve'),alp:t('alp'),rf:t('rf')};
-  const txt='⚔️ *REPORTE SEMANAL — GLADIADORES*%0A📅 '+fmtFecha(ini)+' al '+fmtFecha(fin)+'%0A%0A'+
+  const txt='⚔️ *REPORTE SEMANAL — '+encodeURIComponent(ver).replace(/%20/g,' ')+'*%0A📅 '+fmtFecha(ini)+' al '+fmtFecha(fin)+'%0A%0A'+
     '📌 Citas agendadas: '+T.ag+'%0A✅ Citas realizadas: '+T.re+'%0A🎤 Presentaciones: '+T.pr+'%0A'+
     '💰 Ventas: '+T.ve+'%0A💵 ALP: $'+T.alp.toLocaleString('en-US')+'%0A🤝 Referidos: '+T.rf;
   window.open('https://wa.me/?text='+txt,'_blank');
@@ -657,14 +685,15 @@ function renderHoy(){
   const e=load('gl_embudo',{ag:0,re:0,ve:0,rf:0});
   $('k-emb').textContent=Math.min(100,Math.round(e.ag/20*100))+'%';
   $('hoy-embudo').innerHTML=embudoHTML(e);
-  const repHoy=load('gl_reps',[]).find(x=>x.fecha===h);
+  const repHoy=load('gl_reps',[]).find(x=>x.fecha===h&&agDe(x)===agenteActual());
   $('hoy-rep').innerHTML=repHoy
-    ?`<div class="fila"><span>Estado</span><b>✅ Guardado</b></div><div class="s">Ag:${repHoy.ag} · Re:${repHoy.re} · Pres:${repHoy.pr} · Ventas:${repHoy.ve} · ALP:$${(+repHoy.alp).toLocaleString('en-US')} · Ref:${repHoy.rf}</div>`
+    ?`<div class="fila"><span>${esc(agenteActual())}</span><b>✅ Guardado</b></div><div class="s">Ag:${repHoy.ag} · Re:${repHoy.re} · Pres:${repHoy.pr} · Ventas:${repHoy.ve} · ALP:$${(+repHoy.alp).toLocaleString('en-US')} · Ref:${repHoy.rf}</div>`
     :'<p class="small">⏳ Pendiente — llénalo al terminar el día.</p>';
 }
 
 /* ===== INIT ===== */
 $('rp-fecha').value=hoyISO();
+poblarAgentes();
 renderCitas();renderRefs();renderSeg();renderEmbudo();renderDrill();renderReportes();renderHoy();
 </script>
 </body>
