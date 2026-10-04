@@ -60,7 +60,8 @@ header.top p{margin:1px 0 0; font-size:11px; color:var(--mut); letter-spacing:.4
 .empsub.act,.hsub.act{display:block; animation:fadein .3s var(--ease);}
 @keyframes fadein{from{opacity:0;} to{opacity:1;}}
 /* ---------- sub nav (chips) ---------- */
-.subnav{display:flex; gap:8px; overflow-x:auto; padding:14px 16px 6px; scrollbar-width:none;}
+.subnav{display:flex; gap:8px; overflow-x:auto; padding:14px 16px 6px; scrollbar-width:none;
+  -webkit-mask-image:linear-gradient(90deg,#000 92%,transparent); mask-image:linear-gradient(90deg,#000 92%,transparent);}
 .subnav::-webkit-scrollbar{display:none;}
 .subnav button{flex:0 0 auto; border:1px solid var(--border); background:var(--card); border-radius:999px;
   padding:9px 16px; font-size:13px; font-weight:600; color:var(--txt); cursor:pointer;
@@ -910,6 +911,7 @@ const App = {
     $('emp-' + name).classList.add('act');
     if (name === 'equipo') this.renderTeam();
     window.scrollTo(0, 0);
+    if (btn && btn.scrollIntoView) setTimeout(() => btn.scrollIntoView({inline:'center', block:'nearest', behavior:'smooth'}), 60);
   },
   hgo(sub) {
     this.go('tab-herramientas');
@@ -923,6 +925,7 @@ const App = {
     $('h-' + name).classList.add('act');
     if (name === 'mapa') setTimeout(() => { initMap(); dibujarMapa(); }, 90);
     window.scrollTo(0, 0);
+    if (btn && btn.scrollIntoView) setTimeout(() => btn.scrollIntoView({inline:'center', block:'nearest', behavior:'smooth'}), 60);
   },
 
   /* ---------- FEED ---------- */
