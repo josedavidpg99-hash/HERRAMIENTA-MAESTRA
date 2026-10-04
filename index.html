@@ -768,7 +768,7 @@ function seed() {
   const now = Date.now();
   return {
     agents: [
-      {id:'yo', name:'Jose David Pacheco', team:'Gladiadores Alpha', role:'Supervisor', clients:34, salesMonth:6, alp:4250, color:'#0095f6', followers:['a2','a3','a5','a7'], following:['a2','a3','a4']},
+      {id:'yo', name:'Jose David Pacheco', team:'Gladiadores Alpha', role:'Supervisor', clients:34, salesMonth:6, alp:4250, color:'linear-gradient(135deg,#f0d48a,#b8860b)', followers:['a2','a3','a5','a7'], following:['a2','a3','a4']},
       {id:'a2', name:'Ana Martínez', team:'Gladiadores Alpha', role:'Agente', clients:41, salesMonth:8, alp:6100, color:'#e91e63', followers:['yo','a3'], following:['yo','a4']},
       {id:'a3', name:'Carlos Ruiz', team:'Gladiadores Alpha', role:'Agente', clients:28, salesMonth:5, alp:3800, color:'#9c27b0', followers:['yo'], following:['yo','a2']},
       {id:'a4', name:'Lucía Fernández', team:'Gladiadores Beta', role:'Agente', clients:35, salesMonth:7, alp:5200, color:'#ff5722', followers:['yo','a6'], following:['a2']},
@@ -808,7 +808,29 @@ const DB = {
   load() {
     try {
       const raw = localStorage.getItem(LS_KEY);
-      if (raw) { this.data = JSON.parse(raw); return; }
+      if (raw) {
+        this.data = JSON.parse(raw);
+        /* migración edición lujo: elimina emojis de publicaciones antiguas (una sola vez) */
+        try {
+          if (!localStorage.getItem('gl_emojiclean')) {
+            const KEEP = new Set(['✕','✓','➤','→','✖','＋','›']);
+            const rx = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{2300}-\u{23FF}\u{FE0F}]/gu;
+            const limpia = s => (s || '').replace(rx, ch => KEEP.has(ch) ? ch : '');
+            let changed = false;
+            (this.data.posts || []).forEach(p => {
+              const t = limpia(p.text);
+              if (t !== p.text) { p.text = t; changed = true; }
+              (p.comments || []).forEach(c => {
+                const ct = limpia(c.text);
+                if (ct !== c.text) { c.text = ct; changed = true; }
+              });
+            });
+            if (changed) this.save();
+            localStorage.setItem('gl_emojiclean', '1');
+          }
+        } catch (e) {}
+        return;
+      }
     } catch (e) {}
     this.data = seed();
     this.save();
@@ -1509,7 +1531,7 @@ function renderHoy(){
   const repHoy=load('gl_reps',[]).find(x=>x.fecha===h&&agDe(x)===agenteActual());
   $('hoy-rep').innerHTML=repHoy
     ?`<div class="fila"><span>${esc(agenteActual())}</span><b>✓ Guardado</b></div><div class="s">Ag:${repHoy.ag} · Re:${repHoy.re} · Pres:${repHoy.pr} · Ventas:${repHoy.ve} · ALP:$${(+repHoy.alp).toLocaleString('en-US')} · Ref:${repHoy.rf}</div>`
-    :'<p class="small">⏳ Pendiente — llénalo al terminar el día.</p>';
+    :'<p class="small">Pendiente — llénalo al terminar el día.</p>';
 }
 
 /* ===== INIT ===== */
